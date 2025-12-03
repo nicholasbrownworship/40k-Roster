@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crusade Command Console – Roster</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Warhammer 40,000 10th Edition Crusade roster tracker." />
+
+  <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1>Crusade Roster</h1>
+        <p>10th Edition Crusade Mode – all units use the standard Crusade schema we defined.</p>
+      </div>
+      <div class="app-meta">
+        <div>Total Units: <span id="meta-total-units">0</span></div>
+        <div>Last Updated: <span id="meta-last-updated">–</span></div>
+      </div>
+    </header>
+
+    <section class="filter-bar">
+      <div class="filter-group">
+        <label class="filter-label" for="filter-team">Team</label>
+        <select id="filter-team" class="filter-select">
+          <option value="">All Teams</option>
+          <option value="Defenders">Defenders</option>
+          <option value="Attackers">Attackers</option>
+          <option value="Raiders">Raiders</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filter-player">Player</label>
+        <select id="filter-player" class="filter-select">
+          <option value="">All Players</option>
+          <!-- options inserted by JS -->
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filter-role">Role</label>
+        <select id="filter-role" class="filter-select">
+          <option value="">All Roles</option>
+          <option value="Character">Character</option>
+          <option value="Battleline">Battleline</option>
+          <option value="Dedicated Transport">Dedicated Transport</option>
+          <option value="Other Datasheets">Other Datasheets</option>
+        </select>
+      </div>
+
+      <div class="filter-group" style="flex:1 1 220px;">
+        <label class="filter-label" for="filter-search">Search</label>
+        <input
+          id="filter-search"
+          class="filter-input"
+          type="search"
+          placeholder="Unit or unique name…"
+        />
+      </div>
+    </section>
+
+    <section class="roster-section" id="roster-section">
+      <!-- Player blocks & unit cards injected by JS -->
+    </section>
+  </main>
+</body>
+</html>
