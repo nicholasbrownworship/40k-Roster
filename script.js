@@ -531,6 +531,12 @@ function initBuilderPage() {
 
   if (!form || !preview || !playerSelect) return;
 
+  // Temporary arrays for this unit's detail editors
+  let builderWeapons = [];
+  let builderWargear = [];
+  let builderHonours = [];
+  let builderScars = [];
+
   // Populate player dropdown
   playerSelect.innerHTML = "";
   const defaultOpt = document.createElement("option");
@@ -559,6 +565,316 @@ function initBuilderPage() {
     playerInfo.textContent = "No players yet. Go to the Players page and create one first.";
   } else {
     playerInfo.textContent = "Select a player to see their army and team.";
+  }
+
+  // === DOM refs for sub-editors ===
+  const weaponNameInput = document.getElementById("weapon-name");
+  const weaponTypeInput = document.getElementById("weapon-type");
+  const weaponProfileInput = document.getElementById("weapon-profile");
+  const weaponKeywordsInput = document.getElementById("weapon-keywords");
+  const weaponNotesInput = document.getElementById("weapon-notes");
+  const weaponAddBtn = document.getElementById("weapon-add-btn");
+  const weaponList = document.getElementById("weapon-list");
+
+  const wargearNameInput = document.getElementById("wargear-name");
+  const wargearEffectInput = document.getElementById("wargear-effect");
+  const wargearSourceInput = document.getElementById("wargear-source");
+  const wargearNotesInput = document.getElementById("wargear-notes");
+  const wargearAddBtn = document.getElementById("wargear-add-btn");
+  const wargearList = document.getElementById("wargear-list");
+
+  const honourNameInput = document.getElementById("honour-name");
+  const honourCategoryInput = document.getElementById("honour-category");
+  const honourEffectInput = document.getElementById("honour-effect");
+  const honourSessionInput = document.getElementById("honour-session");
+  const honourNotesInput = document.getElementById("honour-notes");
+  const honourAddBtn = document.getElementById("honour-add-btn");
+  const honourList = document.getElementById("honour-list");
+
+  const scarNameInput = document.getElementById("scar-name");
+  const scarEffectInput = document.getElementById("scar-effect");
+  const scarSessionInput = document.getElementById("scar-session");
+  const scarNotesInput = document.getElementById("scar-notes");
+  const scarAddBtn = document.getElementById("scar-add-btn");
+  const scarList = document.getElementById("scar-list");
+
+  // === RENDER HELPERS ===
+  function renderWeaponList() {
+    weaponList.innerHTML = "";
+    if (!builderWeapons.length) {
+      weaponList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No weapons added.</p>';
+      return;
+    }
+    builderWeapons.forEach((w, index) => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.justifyContent = "space-between";
+      row.style.alignItems = "center";
+      row.style.fontSize = ".8rem";
+      row.style.padding = ".15rem 0";
+
+      const left = document.createElement("div");
+      left.innerHTML = `<strong>${w.name}</strong> <span style="color:#9ca3af;">(${w.type}) – ${w.profile}</span>`;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "×";
+      btn.style.border = "none";
+      btn.style.borderRadius = "999px";
+      btn.style.padding = "0 .4rem";
+      btn.style.cursor = "pointer";
+      btn.style.background = "#111827";
+      btn.style.color = "#fca5a5";
+      btn.addEventListener("click", () => {
+        builderWeapons.splice(index, 1);
+        renderWeaponList();
+      });
+
+      row.appendChild(left);
+      row.appendChild(btn);
+      weaponList.appendChild(row);
+    });
+  }
+
+  function renderWargearList() {
+    wargearList.innerHTML = "";
+    if (!builderWargear.length) {
+      wargearList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No wargear added.</p>';
+      return;
+    }
+    builderWargear.forEach((g, index) => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.justifyContent = "space-between";
+      row.style.alignItems = "center";
+      row.style.fontSize = ".8rem";
+      row.style.padding = ".15rem 0";
+
+      const left = document.createElement("div");
+      left.innerHTML = `<strong>${g.name}</strong> <span style="color:#9ca3af;">– ${g.effect}</span>`;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "×";
+      btn.style.border = "none";
+      btn.style.borderRadius = "999px";
+      btn.style.padding = "0 .4rem";
+      btn.style.cursor = "pointer";
+      btn.style.background = "#111827";
+      btn.style.color = "#fca5a5";
+      btn.addEventListener("click", () => {
+        builderWargear.splice(index, 1);
+        renderWargearList();
+      });
+
+      row.appendChild(left);
+      row.appendChild(btn);
+      wargearList.appendChild(row);
+    });
+  }
+
+  function renderHonourList() {
+    honourList.innerHTML = "";
+    if (!builderHonours.length) {
+      honourList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle honours added.</p>';
+      return;
+    }
+    builderHonours.forEach((h, index) => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.justifyContent = "space-between";
+      row.style.alignItems = "center";
+      row.style.fontSize = ".8rem";
+      row.style.padding = ".15rem 0";
+
+      const left = document.createElement("div");
+      left.innerHTML = `<strong>${h.name}</strong> <span style="color:#9ca3af;">[${h.category}] – ${h.effect}</span>`;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "×";
+      btn.style.border = "none";
+      btn.style.borderRadius = "999px";
+      btn.style.padding = "0 .4rem";
+      btn.style.cursor = "pointer";
+      btn.style.background = "#111827";
+      btn.style.color = "#fca5a5";
+      btn.addEventListener("click", () => {
+        builderHonours.splice(index, 1);
+        renderHonourList();
+      });
+
+      row.appendChild(left);
+      row.appendChild(btn);
+      honourList.appendChild(row);
+    });
+  }
+
+  function renderScarList() {
+    scarList.innerHTML = "";
+    if (!builderScars.length) {
+      scarList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle scars added.</p>';
+      return;
+    }
+    builderScars.forEach((s, index) => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.justifyContent = "space-between";
+      row.style.alignItems = "center";
+      row.style.fontSize = ".8rem";
+      row.style.padding = ".15rem 0";
+
+      const left = document.createElement("div");
+      left.innerHTML = `<strong>${s.name}</strong> <span style="color:#9ca3af;">– ${s.effect}</span>`;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "×";
+      btn.style.border = "none";
+      btn.style.borderRadius = "999px";
+      btn.style.padding = "0 .4rem";
+      btn.style.cursor = "pointer";
+      btn.style.background = "#111827";
+      btn.style.color = "#fca5a5";
+      btn.addEventListener("click", () => {
+        builderScars.splice(index, 1);
+        renderScarList();
+      });
+
+      row.appendChild(left);
+      row.appendChild(btn);
+      scarList.appendChild(row);
+    });
+  }
+
+  // Initial renders for empty lists
+  renderWeaponList();
+  renderWargearList();
+  renderHonourList();
+  renderScarList();
+
+  // === ADD HANDLERS ===
+  if (weaponAddBtn) {
+    weaponAddBtn.addEventListener("click", () => {
+      const name = weaponNameInput.value.trim();
+      const type = weaponTypeInput.value.trim();
+      const profile = weaponProfileInput.value.trim();
+      const kwRaw = weaponKeywordsInput.value;
+      const notes = weaponNotesInput.value.trim();
+
+      if (!name || !profile) {
+        alert("Weapon needs at least a name and profile.");
+        return;
+      }
+
+      const keywords = kwRaw
+        .split(",")
+        .map(k => k.trim())
+        .filter(k => k.length > 0);
+
+      builderWeapons.push({
+        name,
+        type: type || "Ranged",
+        profile,
+        keywords,
+        notes
+      });
+
+      weaponNameInput.value = "";
+      weaponTypeInput.value = "";
+      weaponProfileInput.value = "";
+      weaponKeywordsInput.value = "";
+      weaponNotesInput.value = "";
+
+      renderWeaponList();
+    });
+  }
+
+  if (wargearAddBtn) {
+    wargearAddBtn.addEventListener("click", () => {
+      const name = wargearNameInput.value.trim();
+      const effect = wargearEffectInput.value.trim();
+      const source = wargearSourceInput.value.trim();
+      const notes = wargearNotesInput.value.trim();
+
+      if (!name || !effect) {
+        alert("Wargear needs at least a name and effect.");
+        return;
+      }
+
+      builderWargear.push({
+        name,
+        effect,
+        source,
+        notes
+      });
+
+      wargearNameInput.value = "";
+      wargearEffectInput.value = "";
+      wargearSourceInput.value = "";
+      wargearNotesInput.value = "";
+
+      renderWargearList();
+    });
+  }
+
+  if (honourAddBtn) {
+    honourAddBtn.addEventListener("click", () => {
+      const name = honourNameInput.value.trim();
+      const category = honourCategoryInput.value || "Battle Trait";
+      const effect = honourEffectInput.value.trim();
+      const sessionEarned = Number(honourSessionInput.value || 0);
+      const notes = honourNotesInput.value.trim();
+
+      if (!name || !effect) {
+        alert("Battle honour needs at least a name and effect.");
+        return;
+      }
+
+      builderHonours.push({
+        name,
+        category,
+        effect,
+        sessionEarned,
+        notes
+      });
+
+      honourNameInput.value = "";
+      honourCategoryInput.value = "";
+      honourEffectInput.value = "";
+      honourSessionInput.value = "";
+      honourNotesInput.value = "";
+
+      renderHonourList();
+    });
+  }
+
+  if (scarAddBtn) {
+    scarAddBtn.addEventListener("click", () => {
+      const name = scarNameInput.value.trim();
+      const effect = scarEffectInput.value.trim();
+      const sessionEarned = Number(scarSessionInput.value || 0);
+      const notes = scarNotesInput.value.trim();
+
+      if (!name || !effect) {
+        alert("Battle scar needs at least a name and effect.");
+        return;
+      }
+
+      builderScars.push({
+        name,
+        effect,
+        sessionEarned,
+        notes
+      });
+
+      scarNameInput.value = "";
+      scarEffectInput.value = "";
+      scarSessionInput.value = "";
+      scarNotesInput.value = "";
+
+      renderScarList();
+    });
   }
 
   updateBuilderPreview(preview);
@@ -622,13 +938,13 @@ function initBuilderPage() {
       rank,
       crusadePoints,
 
-      weapons: [],
-      wargear: [],
-      upgrades: [],
-      relics: [],
+      weapons: builderWeapons.slice(),
+      wargear: builderWargear.slice(),
+      upgrades: [],      // future editor
+      relics: [],        // future editor
 
-      battleHonours: [],
-      battleScars: [],
+      battleHonours: builderHonours.slice(),
+      battleScars: builderScars.slice(),
 
       notes,
       image: image || "",
@@ -651,11 +967,23 @@ function initBuilderPage() {
     updateBuilderPreview(preview);
 
     const keepPlayerId = playerSelect.value;
+
+    // Reset form & per-unit arrays
     form.reset();
+    builderWeapons = [];
+    builderWargear = [];
+    builderHonours = [];
+    builderScars = [];
+    renderWeaponList();
+    renderWargearList();
+    renderHonourList();
+    renderScarList();
+
+    // Restore selected player
     playerSelect.value = keepPlayerId || "";
     playerSelect.dispatchEvent(new Event("change"));
 
-    alert("Unit added. Copy the JSON if needed, or view it on the Roster page.");
+    alert("Unit added. You can now see it on the Roster page.");
   });
 }
 
