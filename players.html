@@ -16,12 +16,51 @@
     <header class="app-header">
       <div class="app-title-block">
         <h1>Players & Armies</h1>
-        <p>Overview of all players, their armies, and team assignments.</p>
+        <p>Create players, assign armies and teams, and manage their associated Crusade units.</p>
       </div>
     </header>
 
+    <!-- Player creator -->
+    <section class="roster-section" style="margin-bottom:1.5rem;">
+      <form id="player-create-form" style="background:rgba(15,23,42,0.9); border-radius:16px; border:1px solid #1f2937; padding:1rem;">
+        <h2 style="margin-top:0; font-size:1rem;">Add Player</h2>
+        <p style="font-size:.8rem; color:#9ca3af; margin-top:0;">
+          Players created here will appear in the Builder dropdown and on the Roster page.
+          Removing a player will also remove all of their units.
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:.5rem;">
+          <div style="flex:1 1 160px;">
+            <label for="player-create-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Player Name</label>
+            <input id="player-create-name" type="text" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+          </div>
+          <div style="flex:1 1 160px;">
+            <label for="player-create-id" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Player ID (optional)</label>
+            <input id="player-create-id" type="text" placeholder="player_nick (autofills if empty)" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+          </div>
+          <div style="flex:1 1 200px;">
+            <label for="player-create-army" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Army Name</label>
+            <input id="player-create-army" type="text" required placeholder="Angels of the Ozark" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+          </div>
+          <div style="flex:1 1 140px;">
+            <label for="player-create-team" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Team</label>
+            <select id="player-create-team" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;">
+              <option value="">Select team…</option>
+              <option value="Defenders">Defenders</option>
+              <option value="Attackers">Attackers</option>
+              <option value="Raiders">Raiders</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" style="margin-top:.6rem; padding:.45rem .9rem; border-radius:999px; border:1px solid #22c55e; background:#166534; color:#e5e7eb; font-size:.85rem; cursor:pointer;">
+          Add Player
+        </button>
+      </form>
+    </section>
+
+    <!-- Player list -->
     <section id="players-list" class="roster-section">
-      <!-- Filled by script.js from crusadeUnits -->
+      <!-- Filled by script.js -->
     </section>
   </main>
 </body>
