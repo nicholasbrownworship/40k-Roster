@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Unit Datacard – Crusade Command</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Full editable datacard for a single Crusade unit." />
+
+  <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1 id="unit-header-title">Unit Datacard</h1>
+        <p id="unit-owner-info" style="font-size:.85rem; color:#9ca3af;">
+          <!-- Filled with Player – Army – Team -->
+        </p>
+      </div>
+      <div class="app-meta">
+        <div>Mode: <span>Crusade</span></div>
+      </div>
+    </header>
+
+    <section class="roster-section" style="display:flex; flex-wrap:wrap; gap:1.5rem;">
+      <!-- Live summary card -->
+      <section style="flex:1 1 260px; min-width:260px;">
+        <h2 style="font-size:1rem; margin-top:0;">Summary</h2>
+        <div id="unit-summary-card">
+          <!-- Filled by script with renderUnitCard(...) -->
+        </div>
+        <button id="unit-delete-btn" type="button" style="margin-top:.75rem; padding:.4rem .8rem; border-radius:999px; border:1px solid #f97373; background:#7f1d1d; color:#fee2e2; font-size:.8rem; cursor:pointer;">
+          Delete Unit from Crusade
+        </button>
+
+        <h3 style="font-size:.9rem; margin-top:1.2rem;">Unit JSON</h3>
+        <textarea id="unit-json-preview" rows="18" readonly style="width:100%; padding:.5rem .6rem; border-radius:12px; border:1px solid #1f2937; background:#020617; color:#e5e7eb; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:.8rem; resize:vertical;"></textarea>
+      </section>
+
+      <!-- Full editable datacard -->
+      <form id="unit-detail-form" style="flex:1 1 340px; max-width:620px; background:rgba(15,23,42,0.9); border-radius:16px; border:1px solid #1f2937; padding:1rem;">
+        <h2 style="margin-top:0; font-size:1rem;">Edit Datacard</h2>
+
+        <!-- Identity -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Identity</legend>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem;">
+            <div style="flex:1 1 180px;">
+              <label for="unit-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Unit Name (datasheet)</label>
+              <input id="unit-name" type="text" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 180px;">
+              <label for="unique-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Unique Name (optional)</label>
+              <input id="unique-name" type="text" placeholder="Squad Baelor" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 160px;">
+              <label for="faction" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Faction</label>
+              <input id="faction" type="text" required placeholder="Space Marines, Tyranids…" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 200px;">
+              <label for="subfaction" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Subfaction / Detachment</label>
+              <input id="subfaction" type="text" placeholder="Ultramarines, Gladius Task Force…" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 160px;">
+              <label for="battlefield-role" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Battlefield Role</label>
+              <select id="battlefield-role" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;">
+                <option value="">Select role…</option>
+                <option value="Character">Character</option>
+                <option value="Battleline">Battleline</option>
+                <option value="Dedicated Transport">Dedicated Transport</option>
+                <option value="Other Datasheets">Other Datasheets</option>
+              </select>
+            </div>
+            <div style="flex:1 1 120px; display:flex; align-items:center; gap:.4rem; margin-top:.6rem;">
+              <input id="is-epic-hero" type="checkbox" />
+              <label for="is-epic-hero" style="font-size:.8rem;">Epic Hero</label>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Crusade core -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Crusade Core</legend>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem;">
+            <div style="flex:1 1 120px;">
+              <label for="points" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Points</label>
+              <input id="points" type="number" min="0" step="5" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 120px;">
+              <label for="models" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Models</label>
+              <input id="models" type="number" min="1" step="1" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 120px;">
+              <label for="experience" style="font-size:.8rem; display:block; margin-bottom:.15rem;">XP</label>
+              <input id="experience" type="number" min="0" step="1" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 140px;">
+              <label for="rank" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Rank</label>
+              <select id="rank" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;">
+                <option value="">Select rank…</option>
+                <option value="Fresh">Fresh</option>
+                <option value="Blooded">Blooded</option>
+                <option value="Battle-hardened">Battle-hardened</option>
+                <option value="Heroic">Heroic</option>
+                <option value="Legendary">Legendary</option>
+              </select>
+            </div>
+            <div style="flex:1 1 120px;">
+              <label for="crusade-points" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Crusade Points</label>
+              <input id="crusade-points" type="number" min="0" step="1" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Keywords, notes, image -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Keywords, Notes & Image</legend>
+          <div style="display:flex; flex-direction:column; gap:.5rem;">
+            <div>
+              <label for="keywords" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Keywords (comma-separated)</label>
+              <input id="keywords" type="text" placeholder="INFANTRY, ADEPTUS ASTARTES, WARLORD" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div>
+              <label for="notes" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Notes</label>
+              <textarea id="notes" rows="3" style="width:100%; padding:.5rem .6rem; border-radius:12px; border:1px solid #1f2937; background:#020617; color:#e5e7eb; resize:vertical;"></textarea>
+            </div>
+            <div>
+              <label for="image" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Image Path / URL</label>
+              <input id="image" type="text" placeholder="images/units/intercessors.png or https://…" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              <p style="font-size:.75rem; color:#9ca3af; margin:.2rem 0 0;">
+                Stored as a string on the unit. We can hook up actual image rendering later.
+              </p>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Weapons editor -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Weapons</legend>
+          <div style="display:flex; flex-direction:column; gap:.4rem;">
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+              <div style="flex:1 1 140px;">
+                <label for="weapon-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Name</label>
+                <input id="weapon-name" type="text" placeholder="Bolt rifle" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 120px;">
+                <label for="weapon-type" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Type</label>
+                <input id="weapon-type" type="text" placeholder="Ranged, Melee…" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 180px;">
+                <label for="weapon-profile" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Profile</label>
+                <input id="weapon-profile" type="text" placeholder='24&quot; A2 BS 3+ S4 AP-1 D1' style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem; align-items:flex-end;">
+              <div style="flex:1 1 200px;">
+                <label for="weapon-keywords" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Keywords (comma-separated)</label>
+                <input id="weapon-keywords" type="text" placeholder="ASSAULT, RAPID FIRE" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 200px;">
+                <label for="weapon-notes" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Notes</label>
+                <input id="weapon-notes" type="text" placeholder="Any special rules…" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div>
+                <button id="weapon-add-btn" type="button" style="padding:.35rem .7rem; border-radius:999px; border:1px solid #38bdf8; background:#0e7490; color:#e5e7eb; font-size:.8rem; cursor:pointer; white-space:nowrap;">
+                  Add Weapon
+                </button>
+              </div>
+            </div>
+            <div id="weapon-list" style="margin-top:.3rem;">
+              <!-- Filled by script -->
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Wargear editor -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Wargear</legend>
+          <div style="display:flex; flex-direction:column; gap:.4rem;">
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+              <div style="flex:1 1 160px;">
+                <label for="wargear-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Name</label>
+                <input id="wargear-name" type="text" placeholder="Frag & krak grenades" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 260px;">
+                <label for="wargear-effect" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Effect</label>
+                <input id="wargear-effect" type="text" placeholder="Once per battle, can be used instead of another ranged attack." style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem; align-items:flex-end;">
+              <div style="flex:1 1 160px;">
+                <label for="wargear-source" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Source</label>
+                <input id="wargear-source" type="text" placeholder="Datasheet, enhancement…" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 200px;">
+                <label for="wargear-notes" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Notes</label>
+                <input id="wargear-notes" type="text" placeholder="Any extra details…" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div>
+                <button id="wargear-add-btn" type="button" style="padding:.35rem .7rem; border-radius:999px; border:1px solid #38bdf8; background:#0e7490; color:#e5e7eb; font-size:.8rem; cursor:pointer; white-space:nowrap;">
+                  Add Wargear
+                </button>
+              </div>
+            </div>
+            <div id="wargear-list" style="margin-top:.3rem;">
+              <!-- Filled by script -->
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Battle honours editor -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Battle Honours</legend>
+          <div style="display:flex; flex-direction:column; gap:.4rem;">
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+              <div style="flex:1 1 160px;">
+                <label for="honour-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Name</label>
+                <input id="honour-name" type="text" placeholder="Grizzled Veterans" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 160px;">
+                <label for="honour-category" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Category</label>
+                <select id="honour-category" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;">
+                  <option value="">Battle Trait</option>
+                  <option value="Battle Trait">Battle Trait</option>
+                  <option value="Weapon Enhancement">Weapon Enhancement</option>
+                  <option value="Crusade Relic">Crusade Relic</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div style="flex:1 1 260px;">
+                <label for="honour-effect" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Effect</label>
+                <input id="honour-effect" type="text" placeholder="Once per phase, re-roll one Hit roll." style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem; align-items:flex-end;">
+              <div style="flex:1 1 140px;">
+                <label for="honour-session" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Session Earned</label>
+                <input id="honour-session" type="number" min="0" step="1" placeholder="3" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 220px;">
+                <label for="honour-notes" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Notes</label>
+                <input id="honour-notes" type="text" placeholder="Any campaign notes…" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div>
+                <button id="honour-add-btn" type="button" style="padding:.35rem .7rem; border-radius:999px; border:1px solid #38bdf8; background:#0e7490; color:#e5e7eb; font-size:.8rem; cursor:pointer; white-space:nowrap;">
+                  Add Honour
+                </button>
+              </div>
+            </div>
+            <div id="honour-list" style="margin-top:.3rem;">
+              <!-- Filled by script -->
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Battle scars editor -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Battle Scars</legend>
+          <div style="display:flex; flex-direction:column; gap:.4rem;">
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+              <div style="flex:1 1 160px;">
+                <label for="scar-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Name</label>
+                <input id="scar-name" type="text" placeholder="Lingering Wounds" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 260px;">
+                <label for="scar-effect" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Effect</label>
+                <input id="scar-effect" type="text" placeholder="Subtract 1&quot; from this unit's Move characteristic." style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem; align-items:flex-end;">
+              <div style="flex:1 1 140px;">
+                <label for="scar-session" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Session Earned</label>
+                <input id="scar-session" type="number" min="0" step="1" placeholder="4" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div style="flex:1 1 220px;">
+                <label for="scar-notes" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Notes</label>
+                <input id="scar-notes" type="text" placeholder="Any campaign notes…" style="width:100%; padding:.3rem .45rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+              </div>
+              <div>
+                <button id="scar-add-btn" type="button" style="padding:.35rem .7rem; border-radius:999px; border:1px solid #38bdf8; background:#0e7490; color:#e5e7eb; font-size:.8rem; cursor:pointer; white-space:nowrap;">
+                  Add Scar
+                </button>
+              </div>
+            </div>
+            <div id="scar-list" style="margin-top:.3rem;">
+              <!-- Filled by script -->
+            </div>
+          </div>
+        </fieldset>
+
+        <button type="submit" style="margin-top:.5rem; padding:.45rem .9rem; border-radius:999px; border:1px solid #22c55e; background:#166534; color:#e5e7eb; font-size:.85rem; cursor:pointer;">
+          Save Changes
+        </button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
