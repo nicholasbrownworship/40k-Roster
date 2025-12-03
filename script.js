@@ -157,7 +157,7 @@ function initRosterPage() {
   // Populate player filter options
   populatePlayerFilter(filterPlayer, crusadeUnits);
 
-  // Set last updated (for now just "today")
+  // Set meta
   if (metaTotalUnits) {
     metaTotalUnits.textContent = crusadeUnits.length.toString();
   }
@@ -181,12 +181,20 @@ function initRosterPage() {
   filterRole && filterRole.addEventListener("change", render);
   filterSearch && filterSearch.addEventListener("input", render);
 
+  // Initial render – will show "Select a player" message until one is chosen
   render();
 }
 
 function populatePlayerFilter(selectEl, units) {
   if (!selectEl) return;
   const seen = new Map(); // playerId -> name
+
+  // First option: must pick a player
+  selectEl.innerHTML = "";
+  const defaultOpt = document.createElement("option");
+  defaultOpt.value = "";
+  defaultOpt.textContent = "Select a player…";
+  selectEl.appendChild(defaultOpt);
 
   units.forEach(u => {
     if (!seen.has(u.playerId)) {
@@ -205,10 +213,21 @@ function populatePlayerFilter(selectEl, units) {
 function renderRoster(container, units, filters) {
   container.innerHTML = "";
 
+  // Require a player selection
+  if (!filters.playerId) {
+    const msg = document.createElement("p");
+    msg.textContent = "Select a player from the dropdown above to view their Crusade roster.";
+    msg.style.color = "#9ca3af";
+    container.appendChild(msg);
+    return;
+  }
+
   // Apply filters
   const filtered = units.filter(unit => {
+    // Always scope to selected player first
+    if (unit.playerId !== filters.playerId) return false;
+
     if (filters.team && unit.team !== filters.team) return false;
-    if (filters.playerId && unit.playerId !== filters.playerId) return false;
     if (filters.role && unit.battlefieldRole !== filters.role) return false;
 
     if (filters.search) {
@@ -228,69 +247,57 @@ function renderRoster(container, units, filters) {
 
   if (!filtered.length) {
     const empty = document.createElement("p");
-    empty.textContent = "No units match the current filters.";
+    empty.textContent = "This player has no units matching the current filters.";
     empty.style.color = "#9ca3af";
     container.appendChild(empty);
     return;
   }
 
-  // Group by playerId
-  const byPlayer = new Map();
+  // We know all units are from the same player now.
+  const playerName = filtered[0].playerName;
+  const team = filtered[0].team;
+  const armyName = filtered[0].armyName;
+
+  const block = document.createElement("section");
+  block.className = "player-block";
+
+  const header = document.createElement("div");
+  header.className = "player-block-header";
+
+  const title = document.createElement("div");
+  title.className = "player-title";
+  title.innerHTML = `<strong>${playerName}</strong> <span>– ${armyName}</span>`;
+
+  const meta = document.createElement("div");
+  meta.className = "player-meta";
+
+  const teamPill = document.createElement("div");
+  teamPill.className = "pill";
+  if (team === "Defenders") teamPill.classList.add("team-defenders");
+  if (team === "Attackers") teamPill.classList.add("team-attackers");
+  if (team === "Raiders") teamPill.classList.add("team-raiders");
+  teamPill.textContent = team;
+
+  const countPill = document.createElement("div");
+  countPill.className = "pill";
+  countPill.textContent = `${filtered.length} unit${filtered.length !== 1 ? "s" : ""}`;
+
+  meta.appendChild(teamPill);
+  meta.appendChild(countPill);
+
+  header.appendChild(title);
+  header.appendChild(meta);
+
+  const grid = document.createElement("div");
+  grid.className = "unit-grid";
+
   filtered.forEach(unit => {
-    const key = unit.playerId;
-    if (!byPlayer.has(key)) {
-      byPlayer.set(key, {
-        playerName: unit.playerName,
-        team: unit.team,
-        armyName: unit.armyName,
-        units: []
-      });
-    }
-    byPlayer.get(key).units.push(unit);
+    grid.appendChild(renderUnitCard(unit));
   });
 
-  for (const [playerId, group] of byPlayer.entries()) {
-    const block = document.createElement("section");
-    block.className = "player-block";
-
-    const header = document.createElement("div");
-    header.className = "player-block-header";
-
-    const title = document.createElement("div");
-    title.className = "player-title";
-    title.innerHTML = `<strong>${group.playerName}</strong> <span>– ${group.armyName}</span>`;
-
-    const meta = document.createElement("div");
-    meta.className = "player-meta";
-
-    const teamPill = document.createElement("div");
-    teamPill.className = "pill";
-    if (group.team === "Defenders") teamPill.classList.add("team-defenders");
-    if (group.team === "Attackers") teamPill.classList.add("team-attackers");
-    if (group.team === "Raiders") teamPill.classList.add("team-raiders");
-    teamPill.textContent = group.team;
-
-    const countPill = document.createElement("div");
-    countPill.className = "pill";
-    countPill.textContent = `${group.units.length} unit${group.units.length !== 1 ? "s" : ""}`;
-
-    meta.appendChild(teamPill);
-    meta.appendChild(countPill);
-
-    header.appendChild(title);
-    header.appendChild(meta);
-
-    const grid = document.createElement("div");
-    grid.className = "unit-grid";
-
-    group.units.forEach(unit => {
-      grid.appendChild(renderUnitCard(unit));
-    });
-
-    block.appendChild(header);
-    block.appendChild(grid);
-    container.appendChild(block);
-  }
+  block.appendChild(header);
+  block.appendChild(grid);
+  container.appendChild(block);
 }
 
 function renderUnitCard(unit) {
@@ -419,7 +426,9 @@ function renderUnitCard(unit) {
   const pipRow = document.createElement("span");
   pipRow.className = "pip-row";
 
-  const totalKills = (unit.kills?.unitsDestroyed || 0) + (unit.kills?.monstersOrVehiclesDestroyed || 0);
+  const totalKills =
+    (unit.kills?.unitsDestroyed || 0) +
+    (unit.kills?.monstersOrVehiclesDestroyed || 0);
   const pipCount = Math.min(5, totalKills);
 
   for (let i = 0; i < 5; i++) {
