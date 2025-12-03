@@ -1,1 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Campaign Log – Crusade Command</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Track Crusade campaign sessions, missions, and results." />
 
+  <!-- Global + Crusade styles -->
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="crusade.css" />
+
+  <script src="script.js" defer></script>
+
+  <style>
+    /* === Campaign Log – page-local layout === */
+    .log-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 1.25rem;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 900px) {
+      .log-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .log-panel {
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 60%);
+      padding: 0.9rem 1rem;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
+    }
+
+    .log-panel h2 {
+      margin: 0 0 0.45rem;
+      font-size: 0.98rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      color: #e5e7eb;
+    }
+
+    .log-panel p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .log-form-grid {
+      margin-top: 0.6rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .log-form-grid > div {
+      min-width: 0;
+    }
+
+    .log-form-grid label {
+      font-size: 0.8rem;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .log-multi-select {
+      min-height: 4.5rem;
+      font-size: 0.8rem;
+    }
+
+    .log-notes {
+      margin-top: 0.6rem;
+    }
+
+    .log-notes label {
+      font-size: 0.8rem;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .log-notes textarea {
+      width: 100%;
+      min-height: 80px;
+    }
+
+    .log-form-footer {
+      margin-top: 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .log-form-footer button[type="submit"] {
+      border-color: #22c55e;
+      background: #166534;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+    }
+
+    .log-filters {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .log-filters > div {
+      flex: 1 1 150px;
+    }
+
+    .log-filters label {
+      font-size: 0.8rem;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .log-list {
+      margin-top: 0.6rem;
+    }
+
+    .log-card {
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top, #020617 0, #000 60%);
+      padding: 0.7rem 0.8rem 0.6rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      font-size: 0.85rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .log-card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      align-items: baseline;
+      margin-bottom: 0.3rem;
+    }
+
+    .log-card-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .log-card-sub {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .log-card-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+
+    .log-pill {
+      border-radius: 999px;
+      padding: 0.05rem 0.45rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      white-space: nowrap;
+    }
+
+    .log-pill.defenders {
+      border-color: #22c55e;
+      color: #bbf7d0;
+      background: rgba(22, 163, 74, 0.15);
+    }
+
+    .log-pill.attackers {
+      border-color: #f97316;
+      color: #fed7aa;
+      background: rgba(251, 146, 60, 0.15);
+    }
+
+    .log-pill.raiders {
+      border-color: #38bdf8;
+      color: #bae6fd;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    .log-pill.winner {
+      border-color: #eab308;
+      color: #fef9c3;
+      background: rgba(234, 179, 8, 0.15);
+    }
+
+    .log-card-footer {
+      margin-top: 0.3rem;
+      border-top: 1px solid #111827;
+      padding-top: 0.35rem;
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1>Campaign Log</h1>
+        <p>Record each session’s mission, territory, forces involved, and who claimed the victory.</p>
+      </div>
+      <div class="app-meta">
+        <div>Total Entries: <span id="log-meta-count">0</span></div>
+        <div>Most Recent: <span id="log-meta-latest">–</span></div>
+      </div>
+    </header>
+
+    <section class="log-layout">
+      <!-- Left: Create new log entry -->
+      <section class="log-panel">
+        <h2>New Entry</h2>
+        <p>Use this form after each game or session. You can always refine notes later.</p>
+
+        <form id="log-form">
+          <div class="log-form-grid">
+            <div>
+              <label for="log-date">Date</label>
+              <input id="log-date" type="date" />
+            </div>
+            <div>
+              <label for="log-session">Session / Round Name</label>
+              <input id="log-session" type="text" placeholder="Session 3 – Fall of Vandros Gate" />
+            </div>
+            <div>
+              <label for="log-mission">Mission</label>
+              <input id="log-mission" type="text" placeholder="Incursion – Supply Drop" />
+            </div>
+            <div>
+              <label for="log-location">Territory / Theatre</label>
+              <input id="log-location" type="text" placeholder="Vandros Gate (Bastior Core)" />
+            </div>
+            <div>
+              <label for="log-points">Points Level</label>
+              <input id="log-points" type="number" min="0" step="50" placeholder="1000 / 1500 / 2000…" />
+            </div>
+            <div>
+              <label for="log-attacker-team">Attacker Team</label>
+              <select id="log-attacker-team">
+                <option value="">Select…</option>
+                <option value="Defenders">Defenders</option>
+                <option value="Attackers">Attackers</option>
+                <option value="Raiders">Raiders</option>
+              </select>
+            </div>
+            <div>
+              <label for="log-defender-team">Defender Team</label>
+              <select id="log-defender-team">
+                <option value="">Select…</option>
+                <option value="Defenders">Defenders</option>
+                <option value="Attackers">Attackers</option>
+                <option value="Raiders">Raiders</option>
+              </select>
+            </div>
+            <div>
+              <label for="log-winner-team">Winner</label>
+              <select id="log-winner-team">
+                <option value="">Select…</option>
+                <option value="Defenders">Defenders</option>
+                <option value="Attackers">Attackers</option>
+                <option value="Raiders">Raiders</option>
+                <option value="Draw">Draw</option>
+              </select>
+            </div>
+            <div>
+              <label for="log-attacker-players">Attacker Players</label>
+              <select id="log-attacker-players" multiple class="log-multi-select"></select>
+              <p style="font-size:.72rem; color:#9ca3af; margin:.15rem 0 0;">
+                Hold Ctrl / Cmd to select multiple.
+              </p>
+            </div>
+            <div>
+              <label for="log-defender-players">Defender Players</label>
+              <select id="log-defender-players" multiple class="log-multi-select"></select>
+              <p style="font-size:.72rem; color:#9ca3af; margin:.15rem 0 0;">
+                Leave blank if using NPC / environmental forces.
+              </p>
+            </div>
+          </div>
+
+          <div class="log-notes">
+            <label for="log-notes">Notes (XP, honours, scars, key moments)</label>
+            <textarea id="log-notes" placeholder="E.g., Helith Reach – Defenders held at 75%. Intercessors gained 'Grizzled Veterans', Predator picked up a battle scar."></textarea>
+          </div>
+
+          <div class="log-form-footer">
+            <button type="submit">Save Log Entry</button>
+            <span>Entries are stored locally in this browser (like the rosters).</span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right: Log list & filters -->
+      <section class="log-panel">
+        <h2>Entries</h2>
+        <p>Filter by team, player, result, or text search to find specific battles.</p>
+
+        <div class="log-filters">
+          <div>
+            <label for="log-filter-team">Team</label>
+            <select id="log-filter-team">
+              <option value="">All teams</option>
+              <option value="Defenders">Defenders</option>
+              <option value="Attackers">Attackers</option>
+              <option value="Raiders">Raiders</option>
+            </select>
+          </div>
+          <div>
+            <label for="log-filter-player">Player</label>
+            <select id="log-filter-player">
+              <option value="">Any player</option>
+            </select>
+          </div>
+          <div>
+            <label for="log-filter-result">Result</label>
+            <select id="log-filter-result">
+              <option value="">Any result</option>
+              <option value="Defenders">Defenders Win</option>
+              <option value="Attackers">Attackers Win</option>
+              <option value="Raiders">Raiders Win</option>
+              <option value="Draw">Draw</option>
+            </select>
+          </div>
+          <div>
+            <label for="log-filter-search">Search</label>
+            <input
+              id="log-filter-search"
+              type="search"
+              placeholder="Search session, mission, territory, notes…"
+              style="width:100%;"
+            />
+          </div>
+        </div>
+
+        <div id="log-list" class="log-list">
+          <!-- Filled by script.js (initLogPage) -->
+        </div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
