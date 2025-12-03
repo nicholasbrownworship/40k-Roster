@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crusade Unit Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Builder for Warhammer 40,000 10th Edition Crusade units." />
+
+  <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1>Crusade Unit Builder</h1>
+        <p>Create Crusade Mode units using the required schema, then reuse them in your roster.</p>
+      </div>
+      <div class="app-meta">
+        <div>Mode: <span>Crusade</span></div>
+      </div>
+    </header>
+
+    <section class="roster-section" style="display:flex; flex-wrap:wrap; gap:1.5rem;">
+      <!-- Builder Form -->
+      <form id="unit-builder-form" style="flex:1 1 320px; max-width:520px; background:rgba(15,23,42,0.9); border-radius:16px; border:1px solid #1f2937; padding:1rem;">
+        <h2 style="margin-top:0; font-size:1rem;">Unit Details</h2>
+
+        <!-- Player / Army -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Ownership</legend>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem;">
+            <div style="flex:1 1 160px;">
+              <label for="player-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Player Name</label>
+              <input id="player-name" type="text" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 160px;">
+              <label for="player-id" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Player ID (internal)</label>
+              <input id="player-id" type="text" placeholder="player_nick" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 160px;">
+              <label for="army-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Army Name</label>
+              <input id="army-name" type="text" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 120px;">
+              <label for="team" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Team</label>
+              <select id="team" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;">
+                <option value="">Select team…</option>
+                <option value="Defenders">Defenders</option>
+                <option value="Attackers">Attackers</option>
+                <option value="Raiders">Raiders</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Identity -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Identity</legend>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem;">
+            <div style="flex:1 1 180px;">
+              <label for="unit-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Unit Name (datasheet)</label>
+              <input id="unit-name" type="text" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 180px;">
+              <label for="unique-name" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Unique Name (optional)</label>
+              <input id="unique-name" type="text" placeholder="Squad Baelor" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 160px;">
+              <label for="faction" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Faction</label>
+              <input id="faction" type="text" required placeholder="Space Marines, Tyranids…" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 200px;">
+              <label for="subfaction" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Subfaction / Detachment</label>
+              <input id="subfaction" type="text" placeholder="Ultramarines, Gladius Task Force…" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 160px;">
+              <label for="battlefield-role" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Battlefield Role</label>
+              <select id="battlefield-role" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;">
+                <option value="">Select role…</option>
+                <option value="Character">Character</option>
+                <option value="Battleline">Battleline</option>
+                <option value="Dedicated Transport">Dedicated Transport</option>
+                <option value="Other Datasheets">Other Datasheets</option>
+              </select>
+            </div>
+            <div style="flex:1 1 120px; display:flex; align-items:center; gap:.4rem; margin-top:.6rem;">
+              <input id="is-epic-hero" type="checkbox" />
+              <label for="is-epic-hero" style="font-size:.8rem;">Epic Hero</label>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Crusade core -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Crusade Core</legend>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem;">
+            <div style="flex:1 1 120px;">
+              <label for="points" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Points</label>
+              <input id="points" type="number" min="0" step="5" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 120px;">
+              <label for="models" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Models</label>
+              <input id="models" type="number" min="1" step="1" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 120px;">
+              <label for="experience" style="font-size:.8rem; display:block; margin-bottom:.15rem;">XP</label>
+              <input id="experience" type="number" min="0" step="1" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div style="flex:1 1 140px;">
+              <label for="rank" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Rank</label>
+              <select id="rank" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;">
+                <option value="">Select rank…</option>
+                <option value="Fresh">Fresh</option>
+                <option value="Blooded">Blooded</option>
+                <option value="Battle-hardened">Battle-hardened</option>
+                <option value="Heroic">Heroic</option>
+                <option value="Legendary">Legendary</option>
+              </select>
+            </div>
+            <div style="flex:1 1 120px;">
+              <label for="crusade-points" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Crusade Points</label>
+              <input id="crusade-points" type="number" min="0" step="1" required style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Keywords & notes -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Keywords & Notes</legend>
+          <div style="display:flex; flex-direction:column; gap:.5rem;">
+            <div>
+              <label for="keywords" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Keywords (comma-separated)</label>
+              <input id="keywords" type="text" placeholder="INFANTRY, ADEPTUS ASTARTES, WARLORD" style="width:100%; padding:.35rem .5rem; border-radius:999px; border:1px solid #1f2937; background:#020617; color:#e5e7eb;" />
+            </div>
+            <div>
+              <label for="notes" style="font-size:.8rem; display:block; margin-bottom:.15rem;">Notes</label>
+              <textarea id="notes" rows="3" style="width:100%; padding:.5rem .6rem; border-radius:12px; border:1px solid #1f2937; background:#020617; color:#e5e7eb; resize:vertical;"></textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Image placeholder -->
+        <fieldset style="border:none; padding:0; margin:0 0 .75rem;">
+          <legend style="font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9ca3af; margin-bottom:.25rem;">Image</legend>
+          <p style="font-size:.8rem; color:#9ca3af; margin:0 0 .4rem;">
+            For now, this will store an empty image field (<code>""</code>). We’ll add upload support in a later step.
+          </p>
+        </fieldset>
+
+        <button type="submit" style="margin-top:.5rem; padding:.45rem .9rem; border-radius:999px; border:1px solid #22c55e; background:#166534; color:#e5e7eb; font-size:.85rem; cursor:pointer;">
+          Add Unit to Preview
+        </button>
+      </form>
+
+      <!-- JSON Preview -->
+      <section style="flex:1 1 260px; min-width:260px;">
+        <h2 style="font-size:1rem; margin-top:0;">Generated Crusade Data</h2>
+        <p style="font-size:.8rem; color:#9ca3af; margin-top:0;">
+          Each time you add a unit, it will appear in this JSON block using the full Crusade schema.
+          You can copy this into a <code>crusadeUnits.json</code> file or into your <code>script.js</code> for now.
+        </p>
+        <textarea id="builder-json-preview" rows="24" readonly style="width:100%; padding:.5rem .6rem; border-radius:12px; border:1px solid #1f2937; background:#020617; color:#e5e7eb; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:.8rem; resize:vertical;"></textarea>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
