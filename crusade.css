@@ -1,0 +1,454 @@
+/* =========================================
+   Crusade Console – Local Styles
+   (scoped so they don't trash global header)
+   ========================================= */
+
+:root {
+  --cr-bg: #020617;
+  --cr-panel: #020617;
+  --cr-panel-alt: #0b1120;
+  --cr-border-subtle: #1f2937;
+  --cr-border-strong: #111827;
+
+  --cr-ink: #e5e7eb;
+  --cr-ink-soft: #9ca3af;
+  --cr-ink-muted: #6b7280;
+
+  --cr-defenders: #22c55e;
+  --cr-attackers: #f97316;
+  --cr-raiders: #38bdf8;
+
+  --cr-xp: #facc15;
+  --cr-rank: #a855f7;
+  --cr-cp: #f97373;
+
+  --cr-radius-lg: 16px;
+  --cr-radius-md: 12px;
+  --cr-radius-pill: 999px;
+
+  --cr-shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.45);
+  --cr-shadow-card: 0 10px 30px rgba(0, 0, 0, 0.45);
+
+  --cr-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --cr-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+/* Only touch the Crusade app shell, not the site header */
+.app-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.2rem 1rem 2rem;
+  font-family: var(--cr-font-sans);
+  color: var(--cr-ink);
+}
+
+/* Give the Crusade area its own background */
+.app-shell {
+  background: radial-gradient(circle at top, #020617 0, #000 55%);
+  border-radius: 0;
+}
+
+/* =========================================
+   App Header (Crusade pages only)
+   ========================================= */
+.app-shell .app-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--cr-radius-lg);
+  border: 1px solid var(--cr-border-subtle);
+  background: radial-gradient(circle at top left, #111827 0, #020617 55%);
+  box-shadow: var(--cr-shadow-soft);
+}
+
+.app-shell .app-title-block h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+}
+
+.app-shell .app-title-block p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--cr-ink-soft);
+}
+
+.app-shell .app-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  text-align: right;
+  color: var(--cr-ink-soft);
+}
+
+.app-shell .app-meta span {
+  color: var(--cr-ink);
+}
+
+@media (max-width: 640px) {
+  .app-shell .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .app-shell .app-meta {
+    text-align: left;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
+/* =========================================
+   Sections & Blocks
+   ========================================= */
+.app-shell .roster-section {
+  margin-top: 0.5rem;
+}
+
+.app-shell .player-block {
+  border-radius: var(--cr-radius-lg);
+  border: 1px solid var(--cr-border-subtle);
+  background: radial-gradient(circle at top, #0f172a 0, #020617 60%);
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--cr-shadow-card);
+}
+
+/* Player block header */
+.app-shell .player-block-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.app-shell .player-title {
+  font-size: 0.95rem;
+}
+
+.app-shell .player-title span {
+  color: var(--cr-ink-soft);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.app-shell .player-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+/* Pills */
+.app-shell .pill {
+  border-radius: var(--cr-radius-pill);
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--cr-border-subtle);
+  background: #020617;
+  color: var(--cr-ink-soft);
+}
+
+.app-shell .team-defenders {
+  border-color: var(--cr-defenders);
+  color: #bbf7d0;
+  background: rgba(22, 163, 74, 0.15);
+}
+
+.app-shell .team-attackers {
+  border-color: var(--cr-attackers);
+  color: #fed7aa;
+  background: rgba(251, 146, 60, 0.15);
+}
+
+.app-shell .team-raiders {
+  border-color: var(--cr-raiders);
+  color: #bae6fd;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+/* =========================================
+   Unit Grid & Cards
+   ========================================= */
+.app-shell .unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.9rem;
+}
+
+.app-shell .unit-card {
+  position: relative;
+  border-radius: var(--cr-radius-md);
+  border: 1px solid var(--cr-border-subtle);
+  background: radial-gradient(circle at top, #020617 0, #000 60%);
+  padding: 0.65rem 0.7rem 0.6rem;
+  box-shadow: var(--cr-shadow-card);
+  font-size: 0.85rem;
+}
+
+.app-shell .unit-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 0.3rem;
+}
+
+.app-shell .unit-name-block {
+  min-width: 0;
+}
+
+.app-shell .unit-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.app-shell .unit-unique-name {
+  font-size: 0.8rem;
+  color: var(--cr-ink-soft);
+}
+
+/* Role pill */
+.app-shell .unit-role-pill {
+  border-radius: var(--cr-radius-pill);
+  padding: 0.1rem 0.45rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--cr-border-subtle);
+  background: #020617;
+  color: var(--cr-ink-soft);
+  white-space: nowrap;
+}
+
+.app-shell .role-character {
+  border-color: #f97316;
+  color: #fed7aa;
+}
+
+.app-shell .role-battleline {
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+
+.app-shell .role-dedicated-transport {
+  border-color: #38bdf8;
+  color: #bae6fd;
+}
+
+.app-shell .role-other {
+  border-color: #a855f7;
+  color: #e9d5ff;
+}
+
+/* Badges */
+.app-shell .unit-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.app-shell .badge {
+  border-radius: var(--cr-radius-pill);
+  padding: 0.1rem 0.45rem;
+  font-size: 0.7rem;
+  border: 1px solid var(--cr-border-subtle);
+  background: #020617;
+  color: var(--cr-ink-soft);
+}
+
+.app-shell .badge-epic {
+  border-color: #facc15;
+  color: #fef3c7;
+}
+
+.app-shell .badge-warlord {
+  border-color: #f97373;
+  color: #fee2e2;
+}
+
+/* Core line */
+.app-shell .unit-core-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--cr-ink-soft);
+  margin-bottom: 0.25rem;
+}
+
+.app-shell .unit-core-line span::before {
+  content: "• ";
+  opacity: 0.6;
+}
+
+.app-shell .unit-core-line span:first-child::before {
+  content: "";
+}
+
+/* Crusade line */
+.app-shell .unit-crusade-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
+}
+
+.app-shell .tag {
+  border-radius: var(--cr-radius-pill);
+  padding: 0.1rem 0.45rem;
+  font-size: 0.72rem;
+  border: 1px solid var(--cr-border-subtle);
+  background: #020617;
+  color: var(--cr-ink-soft);
+}
+
+.app-shell .tag-xp {
+  border-color: var(--cr-xp);
+  color: #fef9c3;
+}
+
+.app-shell .tag-rank {
+  border-color: var(--cr-rank);
+  color: #e9d5ff;
+}
+
+.app-shell .tag-cp {
+  border-color: var(--cr-cp);
+  color: #fee2e2;
+}
+
+/* Footer / kills */
+.app-shell .unit-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.2rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid #111827;
+}
+
+.app-shell .unit-footer-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  color: var(--cr-ink-soft);
+}
+
+.app-shell .pip-row {
+  display: inline-flex;
+  gap: 0.12rem;
+  margin-left: 0.25rem;
+}
+
+.app-shell .pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  border: 1px solid #374151;
+  background: transparent;
+}
+
+.app-shell .pip-filled {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+/* =========================================
+   Forms inside Crusade pages
+   ========================================= */
+.app-shell label {
+  color: var(--cr-ink-soft);
+}
+
+.app-shell input[type="text"],
+.app-shell input[type="number"],
+.app-shell input[type="search"],
+.app-shell select,
+.app-shell textarea {
+  background: #020617;
+  color: var(--cr-ink);
+  border-radius: var(--cr-radius-pill);
+  border: 1px solid var(--cr-border-subtle);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.app-shell textarea {
+  border-radius: var(--cr-radius-md);
+  resize: vertical;
+}
+
+.app-shell input::placeholder,
+.app-shell textarea::placeholder {
+  color: var(--cr-ink-muted);
+}
+
+.app-shell input:focus,
+.app-shell select:focus,
+.app-shell textarea:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
+}
+
+/* Buttons (only those inside Crusade app) */
+.app-shell button {
+  background: #111827;
+  color: var(--cr-ink);
+  border-radius: var(--cr-radius-pill);
+  border: 1px solid var(--cr-border-subtle);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.app-shell button:hover {
+  filter: brightness(1.05);
+}
+
+/* Manage link on cards */
+.app-shell .unit-manage-btn,
+.app-shell a[href^="unit.html"] {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--cr-radius-pill);
+  border: 1px solid #38bdf8;
+  background: #0e7490;
+  color: #e5e7eb;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* JSON textareas */
+.app-shell textarea#builder-json-preview,
+.app-shell textarea#unit-json-preview {
+  font-family: var(--cr-font-mono);
+  font-size: 0.8rem;
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid var(--cr-border-subtle);
+  border-radius: var(--cr-radius-md);
+}
+
+/* Small text utils */
+.app-shell .text-muted {
+  color: var(--cr-ink-soft);
+}
+
+.app-shell .text-xs {
+  font-size: 0.75rem;
+}
+
+.app-shell .text-sm {
+  font-size: 0.85rem;
+}
