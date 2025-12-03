@@ -1,10 +1,12 @@
 // === STORAGE KEYS ===
 const STORAGE_KEY_PLAYERS = "crusadePlayers_v1";
 const STORAGE_KEY_UNITS = "crusadeUnits_v1";
+const STORAGE_KEY_LOGS = "crusadeLogs_v1";
 
 // In-memory data (loaded from localStorage)
 let players = [];
 let crusadeUnits = [];
+let battleLogs = [];
 
 // === HEADER LOADER ===
 function loadHeader() {
@@ -12,11 +14,11 @@ function loadHeader() {
   if (!headerContainer) return;
 
   fetch("header.html")
-    .then(res => res.text())
-    .then(html => {
+    .then((res) => res.text())
+    .then((html) => {
       headerContainer.innerHTML = html;
     })
-    .catch(err => {
+    .catch((err) => {
       console.error("Failed to load header.html", err);
     });
 }
@@ -24,7 +26,9 @@ function loadHeader() {
 // === DATA LOAD / SAVE ===
 function loadData() {
   try {
-    const storedPlayers = JSON.parse(localStorage.getItem(STORAGE_KEY_PLAYERS) || "[]");
+    const storedPlayers = JSON.parse(
+      localStorage.getItem(STORAGE_KEY_PLAYERS) || "[]"
+    );
     if (Array.isArray(storedPlayers)) {
       players = storedPlayers;
     }
@@ -34,7 +38,9 @@ function loadData() {
   }
 
   try {
-    const storedUnits = JSON.parse(localStorage.getItem(STORAGE_KEY_UNITS) || "[]");
+    const storedUnits = JSON.parse(
+      localStorage.getItem(STORAGE_KEY_UNITS) || "[]"
+    );
     if (Array.isArray(storedUnits)) {
       crusadeUnits = storedUnits;
     }
@@ -42,12 +48,25 @@ function loadData() {
     console.error("Error loading units from storage", err);
     crusadeUnits = [];
   }
+
+  try {
+    const storedLogs = JSON.parse(
+      localStorage.getItem(STORAGE_KEY_LOGS) || "[]"
+    );
+    if (Array.isArray(storedLogs)) {
+      battleLogs = storedLogs;
+    }
+  } catch (err) {
+    console.error("Error loading logs from storage", err);
+    battleLogs = [];
+  }
 }
 
 function saveData() {
   try {
     localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(players));
     localStorage.setItem(STORAGE_KEY_UNITS, JSON.stringify(crusadeUnits));
+    localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(battleLogs));
   } catch (err) {
     console.error("Error saving data to storage", err);
   }
@@ -71,7 +90,15 @@ function initCrusadeApp() {
     initBuilderPage();
   } else if (path.endsWith("unit.html")) {
     initUnitPage();
+  } else if (path.endsWith("log.html")) {
+    initLogPage();
   }
+}
+
+// Helper: player name lookup
+function getPlayerNameById(id) {
+  const p = players.find((pl) => pl.id === id);
+  return p ? p.name : "(Unknown)";
 }
 
 // =======================================================
@@ -125,7 +152,7 @@ function populatePlayerFilter(selectEl) {
   defaultOpt.textContent = players.length ? "Select a player…" : "No players yet";
   selectEl.appendChild(defaultOpt);
 
-  players.forEach(p => {
+  players.forEach((p) => {
     const opt = document.createElement("option");
     opt.value = p.id;
     opt.textContent = p.name;
@@ -146,24 +173,20 @@ function renderRoster(container, filters) {
 
   if (!filters.playerId) {
     const msg = document.createElement("p");
-    msg.textContent = "Select a player from the dropdown above to view their Crusade roster.";
+    msg.textContent =
+      "Select a player from the dropdown above to view their Crusade roster.";
     msg.style.color = "#9ca3af";
     container.appendChild(msg);
     return;
   }
 
-  const filtered = crusadeUnits.filter(unit => {
+  const filtered = crusadeUnits.filter((unit) => {
     if (unit.playerId !== filters.playerId) return false;
     if (filters.team && unit.team !== filters.team) return false;
     if (filters.role && unit.battlefieldRole !== filters.role) return false;
 
     if (filters.search) {
-      const haystack = [
-        unit.unitName || "",
-        unit.uniqueName || "",
-        unit.faction || "",
-        unit.armyName || ""
-      ]
+      const haystack = [unit.unitName || "", unit.uniqueName || "", unit.faction || "", unit.armyName || ""]
         .join(" ")
         .toLowerCase();
       if (!haystack.includes(filters.search)) return false;
@@ -179,7 +202,7 @@ function renderRoster(container, filters) {
     return;
   }
 
-  const player = players.find(p => p.id === filters.playerId);
+  const player = players.find((p) => p.id === filters.playerId);
   const playerName = player ? player.name : filtered[0].playerName;
   const team = player ? player.team : filtered[0].team;
   const armyName = player ? player.armyName : filtered[0].armyName;
@@ -206,7 +229,9 @@ function renderRoster(container, filters) {
 
   const countPill = document.createElement("div");
   countPill.className = "pill";
-  countPill.textContent = `${filtered.length} unit${filtered.length !== 1 ? "s" : ""}`;
+  countPill.textContent = `${filtered.length} unit${
+    filtered.length !== 1 ? "s" : ""
+  }`;
 
   meta.appendChild(teamPill);
   meta.appendChild(countPill);
@@ -217,7 +242,7 @@ function renderRoster(container, filters) {
   const grid = document.createElement("div");
   grid.className = "unit-grid";
 
-  filtered.forEach(unit => {
+  filtered.forEach((unit) => {
     grid.appendChild(renderUnitCard(unit, { showManageButton: true }));
   });
 
@@ -298,7 +323,9 @@ function renderUnitCard(unit, opts = {}) {
   coreLine.appendChild(pts);
 
   const mdl = document.createElement("span");
-  mdl.textContent = `${unit.models} model${unit.models !== 1 ? "s" : ""}`;
+  mdl.textContent = `${unit.models} model${
+    unit.models !== 1 ? "s" : ""
+  }`;
   coreLine.appendChild(mdl);
 
   const fac = document.createElement("span");
@@ -380,13 +407,7 @@ function renderUnitCard(unit, opts = {}) {
     const manageLink = document.createElement("a");
     manageLink.href = `unit.html?id=${encodeURIComponent(unit.id)}`;
     manageLink.textContent = "View & Edit Datacard";
-    manageLink.style.fontSize = ".8rem";
-    manageLink.style.padding = ".25rem .6rem";
-    manageLink.style.borderRadius = "999px";
-    manageLink.style.border = "1px solid #38bdf8";
-    manageLink.style.background = "#0f172a";
-    manageLink.style.color = "#e5e7eb";
-    manageLink.style.textDecoration = "none";
+    manageLink.className = "unit-manage-btn";
 
     manageBar.appendChild(manageLink);
     card.appendChild(manageBar);
@@ -415,7 +436,7 @@ function initPlayersPage() {
       return;
     }
 
-    players.forEach(player => {
+    players.forEach((player) => {
       const block = document.createElement("section");
       block.className = "player-block";
 
@@ -431,15 +452,21 @@ function initPlayersPage() {
 
       const teamPill = document.createElement("div");
       teamPill.className = "pill";
-      if (player.team === "Defenders") teamPill.classList.add("team-defenders");
-      if (player.team === "Attackers") teamPill.classList.add("team-attackers");
+      if (player.team === "Defenders")
+        teamPill.classList.add("team-defenders");
+      if (player.team === "Attackers")
+        teamPill.classList.add("team-attackers");
       if (player.team === "Raiders") teamPill.classList.add("team-raiders");
       teamPill.textContent = player.team;
 
-      const unitCount = crusadeUnits.filter(u => u.playerId === player.id).length;
+      const unitCount = crusadeUnits.filter(
+        (u) => u.playerId === player.id
+      ).length;
       const countPill = document.createElement("div");
       countPill.className = "pill";
-      countPill.textContent = `${unitCount} unit${unitCount !== 1 ? "s" : ""}`;
+      countPill.textContent = `${unitCount} unit${
+        unitCount !== 1 ? "s" : ""
+      }`;
 
       meta.appendChild(teamPill);
       meta.appendChild(countPill);
@@ -454,15 +481,19 @@ function initPlayersPage() {
       list.style.fontSize = "0.85rem";
 
       crusadeUnits
-        .filter(u => u.playerId === player.id)
-        .forEach(unit => {
+        .filter((u) => u.playerId === player.id)
+        .forEach((unit) => {
           const li = document.createElement("li");
           li.style.padding = "0.2rem 0";
           li.style.display = "flex";
           li.style.justifyContent = "space-between";
           li.innerHTML = `
-            <span>${unit.unitName}${unit.uniqueName ? ` – <em>${unit.uniqueName}</em>` : ""}</span>
-            <span style="color:#9ca3af;">${unit.points} pts · XP ${unit.experience}</span>
+            <span>${unit.unitName}${
+            unit.uniqueName ? ` – <em>${unit.uniqueName}</em>` : ""
+          }</span>
+            <span style="color:#9ca3af;">${unit.points} pts · XP ${
+            unit.experience
+          }</span>
           `;
           list.appendChild(li);
         });
@@ -484,8 +515,14 @@ function initPlayersPage() {
         );
         if (!ok) return;
 
-        players = players.filter(p => p.id !== player.id);
-        crusadeUnits = crusadeUnits.filter(u => u.playerId !== player.id);
+        players = players.filter((p) => p.id !== player.id);
+        crusadeUnits = crusadeUnits.filter((u) => u.playerId !== player.id);
+        // Remove their logs too
+        battleLogs = battleLogs.filter(
+          (log) =>
+            !log.attackerPlayerIds.includes(player.id) &&
+            !log.defenderPlayerIds.includes(player.id)
+        );
         saveData();
         render();
       });
@@ -524,7 +561,7 @@ function initPlayersPage() {
           .replace(/^_+|_+$/g, "");
     }
 
-    if (players.some(p => p.id === id)) {
+    if (players.some((p) => p.id === id)) {
       alert("That player ID already exists. Choose a different one.");
       return;
     }
@@ -569,7 +606,7 @@ function initBuilderPage() {
   defaultOpt.textContent = players.length ? "Select a player…" : "No players yet";
   playerSelect.appendChild(defaultOpt);
 
-  players.forEach(p => {
+  players.forEach((p) => {
     const opt = document.createElement("option");
     opt.value = p.id;
     opt.textContent = p.name;
@@ -578,16 +615,18 @@ function initBuilderPage() {
 
   playerSelect.addEventListener("change", () => {
     const id = playerSelect.value;
-    const player = players.find(p => p.id === id);
+    const player = players.find((p) => p.id === id);
     if (!player) {
-      playerInfo.textContent = "Select a player to see their army and team.";
+      playerInfo.textContent =
+        "Select a player to see their army and team.";
     } else {
       playerInfo.textContent = `${player.armyName} – ${player.team}`;
     }
   });
 
   if (!players.length) {
-    playerInfo.textContent = "No players yet. Go to the Players page and create one first.";
+    playerInfo.textContent =
+      "No players yet. Go to the Players page and create one first.";
   } else {
     playerInfo.textContent = "Select a player to see their army and team.";
   }
@@ -627,7 +666,8 @@ function initBuilderPage() {
   function renderWeaponList() {
     weaponList.innerHTML = "";
     if (!builderWeapons.length) {
-      weaponList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No weapons added.</p>';
+      weaponList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No weapons added.</p>';
       return;
     }
     builderWeapons.forEach((w, index) => {
@@ -664,7 +704,8 @@ function initBuilderPage() {
   function renderWargearList() {
     wargearList.innerHTML = "";
     if (!builderWargear.length) {
-      wargearList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No wargear added.</p>';
+      wargearList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No wargear added.</p>';
       return;
     }
     builderWargear.forEach((g, index) => {
@@ -701,7 +742,8 @@ function initBuilderPage() {
   function renderHonourList() {
     honourList.innerHTML = "";
     if (!builderHonours.length) {
-      honourList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle honours added.</p>';
+      honourList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle honours added.</p>';
       return;
     }
     builderHonours.forEach((h, index) => {
@@ -738,7 +780,8 @@ function initBuilderPage() {
   function renderScarList() {
     scarList.innerHTML = "";
     if (!builderScars.length) {
-      scarList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle scars added.</p>';
+      scarList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle scars added.</p>';
       return;
     }
     builderScars.forEach((s, index) => {
@@ -794,8 +837,8 @@ function initBuilderPage() {
 
       const keywords = kwRaw
         .split(",")
-        .map(k => k.trim())
-        .filter(k => k.length > 0);
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0);
 
       builderWeapons.push({
         name,
@@ -908,45 +951,56 @@ function initBuilderPage() {
     e.preventDefault();
 
     const selectedPlayerId = playerSelect.value;
-    const player = players.find(p => p.id === selectedPlayerId);
+    const player = players.find((p) => p.id === selectedPlayerId);
 
     if (!player) {
       alert("Select a valid player before adding a unit.");
       return;
     }
 
-    const unitName = document.getElementById("unit-name").value.trim();
+    const unitNameVal = document.getElementById("unit-name").value.trim();
     const uniqueName = document.getElementById("unique-name").value.trim();
     const faction = document.getElementById("faction").value.trim();
-    const subfaction = document.getElementById("subfaction").value.trim();
-    const battlefieldRole = document.getElementById("battlefield-role").value;
+    const subfaction =
+      document.getElementById("subfaction").value.trim();
+    const battlefieldRole = document.getElementById(
+      "battlefield-role"
+    ).value;
     const isEpicHero = document.getElementById("is-epic-hero").checked;
 
-    const points = Number(document.getElementById("points").value || 0);
-    const models = Number(document.getElementById("models").value || 1);
-    const experience = Number(document.getElementById("experience").value || 0);
+    const points = Number(
+      document.getElementById("points").value || 0
+    );
+    const models = Number(
+      document.getElementById("models").value || 1
+    );
+    const experience = Number(
+      document.getElementById("experience").value || 0
+    );
     const rank = document.getElementById("rank").value;
-    const crusadePoints = Number(document.getElementById("crusade-points").value || 0);
+    const crusadePoints = Number(
+      document.getElementById("crusade-points").value || 0
+    );
 
     const keywordsRaw = document.getElementById("keywords").value;
     const notes = document.getElementById("notes").value;
     const image = document.getElementById("image").value.trim();
 
-    if (!unitName || !faction || !battlefieldRole || !rank) {
+    if (!unitNameVal || !faction || !battlefieldRole || !rank) {
       alert("Please fill in all required unit fields.");
       return;
     }
 
     const keywords = keywordsRaw
       .split(",")
-      .map(k => k.trim())
-      .filter(k => k.length > 0);
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0);
 
     const id = `unit_${Date.now()}`;
 
     const newUnit = {
       id,
-      unitName,
+      unitName: unitNameVal,
       faction,
       subfactionOrDetachment: subfaction,
 
@@ -1006,7 +1060,9 @@ function initBuilderPage() {
     playerSelect.value = keepPlayerId || "";
     playerSelect.dispatchEvent(new Event("change"));
 
-    alert("Unit added. You can now see it on the Roster page, or edit its datacard.");
+    alert(
+      "Unit added. You can now see it on the Roster page, or edit its datacard."
+    );
   });
 }
 
@@ -1014,7 +1070,8 @@ function updateBuilderPreview(previewEl) {
   try {
     previewEl.value = JSON.stringify(crusadeUnits, null, 2);
   } catch (err) {
-    previewEl.value = "// Error serializing crusadeUnits:\n" + String(err);
+    previewEl.value =
+      "// Error serializing crusadeUnits:\n" + String(err);
   }
 }
 
@@ -1034,9 +1091,10 @@ function initUnitPage() {
 
   if (!form || !preview || !summaryContainer) return;
 
-  const idx = crusadeUnits.findIndex(u => u.id === unitId);
+  const idx = crusadeUnits.findIndex((u) => u.id === unitId);
   if (idx === -1) {
-    summaryContainer.innerHTML = "<p style='color:#fca5a5;'>Unit not found. Maybe it was deleted?</p>";
+    summaryContainer.innerHTML =
+      "<p style='color:#fca5a5;'>Unit not found. Maybe it was deleted?</p>";
     form.style.display = "none";
     if (headerTitle) headerTitle.textContent = "Unit not found";
     return;
@@ -1064,7 +1122,9 @@ function initUnitPage() {
   // Summary card
   function renderSummary() {
     summaryContainer.innerHTML = "";
-    summaryContainer.appendChild(renderUnitCard(currentUnit, { showManageButton: false }));
+    summaryContainer.appendChild(
+      renderUnitCard(currentUnit, { showManageButton: false })
+    );
   }
 
   // === DOM refs for form fields ===
@@ -1072,14 +1132,17 @@ function initUnitPage() {
   const uniqueNameInput = document.getElementById("unique-name");
   const factionInput = document.getElementById("faction");
   const subfactionInput = document.getElementById("subfaction");
-  const battlefieldRoleSelect = document.getElementById("battlefield-role");
-  const epicHeroCheckbox = document.getElementById("is-epic-hero");
+  const battlefieldRoleSelect =
+    document.getElementById("battlefield-role");
+  const epicHeroCheckbox =
+    document.getElementById("is-epic-hero");
 
   const pointsInput = document.getElementById("points");
   const modelsInput = document.getElementById("models");
   const experienceInput = document.getElementById("experience");
   const rankSelect = document.getElementById("rank");
-  const crusadePointsInput = document.getElementById("crusade-points");
+  const crusadePointsInput =
+    document.getElementById("crusade-points");
 
   const keywordsInput = document.getElementById("keywords");
   const notesInput = document.getElementById("notes");
@@ -1088,30 +1151,40 @@ function initUnitPage() {
   // Sub-editors
   const weaponNameInput = document.getElementById("weapon-name");
   const weaponTypeInput = document.getElementById("weapon-type");
-  const weaponProfileInput = document.getElementById("weapon-profile");
-  const weaponKeywordsInput = document.getElementById("weapon-keywords");
+  const weaponProfileInput =
+    document.getElementById("weapon-profile");
+  const weaponKeywordsInput =
+    document.getElementById("weapon-keywords");
   const weaponNotesInput = document.getElementById("weapon-notes");
   const weaponAddBtn = document.getElementById("weapon-add-btn");
   const weaponList = document.getElementById("weapon-list");
 
   const wargearNameInput = document.getElementById("wargear-name");
-  const wargearEffectInput = document.getElementById("wargear-effect");
-  const wargearSourceInput = document.getElementById("wargear-source");
-  const wargearNotesInput = document.getElementById("wargear-notes");
+  const wargearEffectInput =
+    document.getElementById("wargear-effect");
+  const wargearSourceInput =
+    document.getElementById("wargear-source");
+  const wargearNotesInput =
+    document.getElementById("wargear-notes");
   const wargearAddBtn = document.getElementById("wargear-add-btn");
   const wargearList = document.getElementById("wargear-list");
 
   const honourNameInput = document.getElementById("honour-name");
-  const honourCategoryInput = document.getElementById("honour-category");
-  const honourEffectInput = document.getElementById("honour-effect");
-  const honourSessionInput = document.getElementById("honour-session");
-  const honourNotesInput = document.getElementById("honour-notes");
+  const honourCategoryInput =
+    document.getElementById("honour-category");
+  const honourEffectInput =
+    document.getElementById("honour-effect");
+  const honourSessionInput =
+    document.getElementById("honour-session");
+  const honourNotesInput =
+    document.getElementById("honour-notes");
   const honourAddBtn = document.getElementById("honour-add-btn");
   const honourList = document.getElementById("honour-list");
 
   const scarNameInput = document.getElementById("scar-name");
   const scarEffectInput = document.getElementById("scar-effect");
-  const scarSessionInput = document.getElementById("scar-session");
+  const scarSessionInput =
+    document.getElementById("scar-session");
   const scarNotesInput = document.getElementById("scar-notes");
   const scarAddBtn = document.getElementById("scar-add-btn");
   const scarList = document.getElementById("scar-list");
@@ -1120,8 +1193,10 @@ function initUnitPage() {
   unitNameInput.value = currentUnit.unitName || "";
   uniqueNameInput.value = currentUnit.uniqueName || "";
   factionInput.value = currentUnit.faction || "";
-  subfactionInput.value = currentUnit.subfactionOrDetachment || "";
-  battlefieldRoleSelect.value = currentUnit.battlefieldRole || "";
+  subfactionInput.value =
+    currentUnit.subfactionOrDetachment || "";
+  battlefieldRoleSelect.value =
+    currentUnit.battlefieldRole || "";
   epicHeroCheckbox.checked = !!currentUnit.isEpicHero;
 
   pointsInput.value = currentUnit.points ?? 0;
@@ -1138,7 +1213,8 @@ function initUnitPage() {
   function renderWeaponList() {
     weaponList.innerHTML = "";
     if (!detailWeapons.length) {
-      weaponList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No weapons added.</p>';
+      weaponList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No weapons added.</p>';
       return;
     }
     detailWeapons.forEach((w, index) => {
@@ -1175,7 +1251,8 @@ function initUnitPage() {
   function renderWargearList() {
     wargearList.innerHTML = "";
     if (!detailWargear.length) {
-      wargearList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No wargear added.</p>';
+      wargearList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No wargear added.</p>';
       return;
     }
     detailWargear.forEach((g, index) => {
@@ -1212,7 +1289,8 @@ function initUnitPage() {
   function renderHonourList() {
     honourList.innerHTML = "";
     if (!detailHonours.length) {
-      honourList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle honours added.</p>';
+      honourList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle honours added.</p>';
       return;
     }
     detailHonours.forEach((h, index) => {
@@ -1249,7 +1327,8 @@ function initUnitPage() {
   function renderScarList() {
     scarList.innerHTML = "";
     if (!detailScars.length) {
-      scarList.innerHTML = '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle scars added.</p>';
+      scarList.innerHTML =
+        '<p style="font-size:.8rem; color:#9ca3af; margin:0;">No battle scars added.</p>';
       return;
     }
     detailScars.forEach((s, index) => {
@@ -1307,8 +1386,8 @@ function initUnitPage() {
 
       const keywords = kwRaw
         .split(",")
-        .map(k => k.trim())
-        .filter(k => k.length > 0);
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0);
 
       detailWeapons.push({
         name,
@@ -1363,7 +1442,9 @@ function initUnitPage() {
       const name = honourNameInput.value.trim();
       const category = honourCategoryInput.value || "Battle Trait";
       const effect = honourEffectInput.value.trim();
-      const sessionEarned = Number(honourSessionInput.value || 0);
+      const sessionEarned = Number(
+        honourSessionInput.value || 0
+      );
       const notes = honourNotesInput.value.trim();
 
       if (!name || !effect) {
@@ -1394,7 +1475,9 @@ function initUnitPage() {
     scarAddBtn.addEventListener("click", () => {
       const name = scarNameInput.value.trim();
       const effect = scarEffectInput.value.trim();
-      const sessionEarned = Number(scarSessionInput.value || 0);
+      const sessionEarned = Number(
+        scarSessionInput.value || 0
+      );
       const notes = scarNotesInput.value.trim();
 
       if (!name || !effect) {
@@ -1423,7 +1506,7 @@ function initUnitPage() {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const unitName = unitNameInput.value.trim();
+    const unitNameVal = unitNameInput.value.trim();
     const uniqueName = uniqueNameInput.value.trim();
     const faction = factionInput.value.trim();
     const subfaction = subfactionInput.value.trim();
@@ -1434,25 +1517,27 @@ function initUnitPage() {
     const models = Number(modelsInput.value || 1);
     const experience = Number(experienceInput.value || 0);
     const rank = rankSelect.value;
-    const crusadePoints = Number(crusadePointsInput.value || 0);
+    const crusadePoints = Number(
+      crusadePointsInput.value || 0
+    );
 
     const keywordsRaw = keywordsInput.value;
     const notes = notesInput.value;
     const image = imageInput.value.trim();
 
-    if (!unitName || !faction || !battlefieldRole || !rank) {
+    if (!unitNameVal || !faction || !battlefieldRole || !rank) {
       alert("Please fill in all required unit fields.");
       return;
     }
 
     const keywords = keywordsRaw
       .split(",")
-      .map(k => k.trim())
-      .filter(k => k.length > 0);
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0);
 
     const updatedUnit = {
       ...currentUnit,
-      unitName,
+      unitName: unitNameVal,
       uniqueName,
       faction,
       subfactionOrDetachment: subfaction,
@@ -1497,7 +1582,9 @@ function initUnitPage() {
       );
       if (!ok) return;
 
-      crusadeUnits = crusadeUnits.filter(u => u.id !== currentUnit.id);
+      crusadeUnits = crusadeUnits.filter(
+        (u) => u.id !== currentUnit.id
+      );
       saveData();
       window.location.href = "index.html";
     });
@@ -1511,4 +1598,324 @@ function initUnitPage() {
       preview.value = "// Error serializing unit:\n" + String(err);
     }
   }
+}
+
+// =========================================
+// LOG PAGE (log.html) – campaign log
+// =========================================
+function initLogPage() {
+  const form = document.getElementById("log-form");
+  const listEl = document.getElementById("log-list");
+  const metaCount = document.getElementById("log-meta-count");
+  const metaLatest = document.getElementById("log-meta-latest");
+
+  if (!form || !listEl) return;
+
+  const attackerPlayersSelect =
+    document.getElementById("log-attacker-players");
+  const defenderPlayersSelect =
+    document.getElementById("log-defender-players");
+  const filterTeam = document.getElementById("log-filter-team");
+  const filterPlayer = document.getElementById("log-filter-player");
+  const filterResult = document.getElementById("log-filter-result");
+  const filterSearch = document.getElementById("log-filter-search");
+
+  // Populate player multi-selects and filter
+  function populatePlayerMulti(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = "";
+    players.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name;
+      selectEl.appendChild(opt);
+    });
+  }
+
+  function populatePlayerFilterSelect(selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = "";
+    const defOpt = document.createElement("option");
+    defOpt.value = "";
+    defOpt.textContent = "Any player";
+    selectEl.appendChild(defOpt);
+    players.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name;
+      selectEl.appendChild(opt);
+    });
+  }
+
+  populatePlayerMulti(attackerPlayersSelect);
+  populatePlayerMulti(defenderPlayersSelect);
+  populatePlayerFilterSelect(filterPlayer);
+
+  // Helper: get selected values from multi-select
+  function getSelectedValues(selectEl) {
+    if (!selectEl) return [];
+    const result = [];
+    for (const opt of selectEl.options) {
+      if (opt.selected && opt.value) {
+        result.push(opt.value);
+      }
+    }
+    return result;
+  }
+
+  // Render logs list
+  function renderLogs() {
+    const teamFilter = filterTeam?.value || "";
+    const playerFilter = filterPlayer?.value || "";
+    const resultFilter = filterResult?.value || "";
+    const search = (filterSearch?.value || "").toLowerCase().trim();
+
+    let logs = [...battleLogs];
+
+    logs.sort((a, b) => {
+      if (a.date && b.date && a.date !== b.date) {
+        return a.date < b.date ? 1 : -1;
+      }
+      return b.createdAt - a.createdAt;
+    });
+
+    if (teamFilter) {
+      logs = logs.filter(
+        (log) =>
+          log.attackerTeam === teamFilter ||
+          log.defenderTeam === teamFilter ||
+          log.winnerTeam === teamFilter
+      );
+    }
+
+    if (playerFilter) {
+      logs = logs.filter(
+        (log) =>
+          log.attackerPlayerIds.includes(playerFilter) ||
+          log.defenderPlayerIds.includes(playerFilter)
+      );
+    }
+
+    if (resultFilter) {
+      logs = logs.filter(
+        (log) => log.winnerTeam === resultFilter
+      );
+    }
+
+    if (search) {
+      logs = logs.filter((log) => {
+        const haystack = [
+          log.sessionName || "",
+          log.mission || "",
+          log.location || "",
+          log.notes || ""
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(search);
+      });
+    }
+
+    listEl.innerHTML = "";
+
+    if (!logs.length) {
+      const msg = document.createElement("p");
+      msg.textContent =
+        "No log entries match the current filters.";
+      msg.style.color = "#9ca3af";
+      msg.style.fontSize = "0.85rem";
+      listEl.appendChild(msg);
+      if (metaCount) metaCount.textContent = String(battleLogs.length);
+      if (metaLatest) {
+        metaLatest.textContent =
+          battleLogs.length && battleLogs[0].date
+            ? battleLogs[0].date
+            : "–";
+      }
+      return;
+    }
+
+    logs.forEach((log) => {
+      const card = document.createElement("article");
+      card.className = "log-card";
+
+      const header = document.createElement("div");
+      header.className = "log-card-header";
+
+      const title = document.createElement("div");
+      title.className = "log-card-title";
+      title.textContent =
+        log.sessionName || log.mission || "Unnamed Session";
+
+      const sub = document.createElement("div");
+      sub.className = "log-card-sub";
+      const dateStr = log.date || "No date";
+      const pointsStr = log.pointsLevel
+        ? `${log.pointsLevel} pts`
+        : "Points n/a";
+      sub.textContent = `${dateStr} · ${pointsStr}`;
+
+      header.appendChild(title);
+      header.appendChild(sub);
+
+      const metaRow = document.createElement("div");
+      metaRow.className = "log-card-meta-row";
+
+      const attackerPill = document.createElement("span");
+      attackerPill.className = "log-pill " + log.attackerTeam.toLowerCase();
+      attackerPill.textContent = `Attacker: ${log.attackerTeam}`;
+      metaRow.appendChild(attackerPill);
+
+      const defenderPill = document.createElement("span");
+      defenderPill.className = "log-pill " + log.defenderTeam.toLowerCase();
+      defenderPill.textContent = `Defender: ${log.defenderTeam}`;
+      metaRow.appendChild(defenderPill);
+
+      const winnerPill = document.createElement("span");
+      winnerPill.className = "log-pill winner";
+      winnerPill.textContent =
+        log.winnerTeam === "Draw"
+          ? "Result: Draw"
+          : `Winner: ${log.winnerTeam}`;
+      metaRow.appendChild(winnerPill);
+
+      if (log.location) {
+        const locPill = document.createElement("span");
+        locPill.className = "log-pill";
+        locPill.textContent = log.location;
+        metaRow.appendChild(locPill);
+      }
+
+      if (log.mission) {
+        const missPill = document.createElement("span");
+        missPill.className = "log-pill";
+        missPill.textContent = log.mission;
+        metaRow.appendChild(missPill);
+      }
+
+      const playersRow = document.createElement("div");
+      playersRow.className = "log-card-meta-row";
+
+      if (log.attackerPlayerIds.length) {
+        const names = log.attackerPlayerIds
+          .map((id) => getPlayerNameById(id))
+          .join(", ");
+        const span = document.createElement("span");
+        span.className = "log-pill";
+        span.textContent = `Attacker players: ${names}`;
+        playersRow.appendChild(span);
+      }
+
+      if (log.defenderPlayerIds.length) {
+        const names = log.defenderPlayerIds
+          .map((id) => getPlayerNameById(id))
+          .join(", ");
+        const span = document.createElement("span");
+        span.className = "log-pill";
+        span.textContent = `Defender players: ${names}`;
+        playersRow.appendChild(span);
+      }
+
+      const footer = document.createElement("div");
+      footer.className = "log-card-footer";
+
+      const notes = (log.notes || "").trim();
+      if (notes) {
+        const maxLen = 260;
+        footer.textContent =
+          notes.length > maxLen
+            ? notes.slice(0, maxLen) + "…"
+            : notes;
+      } else {
+        footer.textContent =
+          "No notes recorded for this session yet.";
+      }
+
+      card.appendChild(header);
+      card.appendChild(metaRow);
+      if (playersRow.childElementCount > 0) {
+        card.appendChild(playersRow);
+      }
+      card.appendChild(footer);
+
+      listEl.appendChild(card);
+    });
+
+    if (metaCount) metaCount.textContent = String(battleLogs.length);
+    if (metaLatest) {
+      const sorted = [...battleLogs].sort((a, b) => {
+        if (a.date && b.date && a.date !== b.date) {
+          return a.date < b.date ? 1 : -1;
+        }
+        return b.createdAt - a.createdAt;
+      });
+      metaLatest.textContent =
+        sorted.length && sorted[0].date ? sorted[0].date : "–";
+    }
+  }
+
+  // Initial render
+  renderLogs();
+
+  // Filter handlers
+  filterTeam && filterTeam.addEventListener("change", renderLogs);
+  filterPlayer && filterPlayer.addEventListener("change", renderLogs);
+  filterResult && filterResult.addEventListener("change", renderLogs);
+  filterSearch && filterSearch.addEventListener("input", renderLogs);
+
+  // Form submit
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const date = document.getElementById("log-date").value;
+    const sessionName =
+      document.getElementById("log-session").value.trim();
+    const mission =
+      document.getElementById("log-mission").value.trim();
+    const location =
+      document.getElementById("log-location").value.trim();
+    const pointsLevel = Number(
+      document.getElementById("log-points").value || 0
+    );
+    const attackerTeam =
+      document.getElementById("log-attacker-team").value;
+    const defenderTeam =
+      document.getElementById("log-defender-team").value;
+    const winnerTeam =
+      document.getElementById("log-winner-team").value;
+    const notes =
+      document.getElementById("log-notes").value.trim();
+
+    const attackerPlayerIds = getSelectedValues(attackerPlayersSelect);
+    const defenderPlayerIds = getSelectedValues(defenderPlayersSelect);
+
+    if (!attackerTeam || !defenderTeam || !winnerTeam) {
+      alert("Please set attacker team, defender team, and winner.");
+      return;
+    }
+
+    const logEntry = {
+      id: `log_${Date.now()}`,
+      createdAt: Date.now(),
+      date,
+      sessionName,
+      mission,
+      location,
+      pointsLevel: pointsLevel || null,
+      attackerTeam,
+      defenderTeam,
+      winnerTeam,
+      attackerPlayerIds,
+      defenderPlayerIds,
+      notes
+    };
+
+    battleLogs.push(logEntry);
+    saveData();
+
+    form.reset();
+    populatePlayerMulti(attackerPlayersSelect);
+    populatePlayerMulti(defenderPlayersSelect);
+    renderLogs();
+  });
 }
