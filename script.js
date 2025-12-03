@@ -19,8 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // === CRUSADE DATA MODEL (Crusade Mode Required Fields) ===
-// This is a small starter array so you can see everything working.
-// You can replace this later with loading from JSON or localStorage.
+// Starter data – you'll replace/expand this with your own units later.
 const crusadeUnits = [
   {
     id: "unit_001",
@@ -41,35 +40,12 @@ const crusadeUnits = [
     rank: "Battle-hardened",
     crusadePoints: 2,
 
-    weapons: [
-      {
-        name: "Bolt rifle",
-        type: "Ranged",
-        profile: '24" A2 BS 3+ S4 AP-1 D1',
-        keywords: ["ASSAULT"],
-        notes: ""
-      }
-    ],
-    wargear: [
-      {
-        name: "Frag & krak grenades",
-        effect: "Once per battle, can be used instead of another ranged attack.",
-        source: "Datasheet",
-        notes: ""
-      }
-    ],
+    weapons: [],
+    wargear: [],
     upgrades: [],
     relics: [],
 
-    battleHonours: [
-      {
-        name: "Grizzled Veterans",
-        category: "Battle Trait",
-        effect: "Once per phase, re-roll one Hit roll.",
-        sessionEarned: 3,
-        notes: ""
-      }
-    ],
+    battleHonours: [],
     battleScars: [],
 
     notes: "Painted as 3rd Company; main objective holders.",
@@ -139,10 +115,12 @@ function initCrusadeApp() {
     initRosterPage();
   } else if (path.endsWith("players.html")) {
     initPlayersPage();
+  } else if (path.endsWith("builder.html")) {
+    initBuilderPage();
   }
 }
 
-// === ROSTER PAGE ===
+// === ROSTER PAGE (player-scoped) ===
 function initRosterPage() {
   const rosterSection = document.getElementById("roster-section");
   if (!rosterSection) return;
@@ -181,7 +159,6 @@ function initRosterPage() {
   filterRole && filterRole.addEventListener("change", render);
   filterSearch && filterSearch.addEventListener("input", render);
 
-  // Initial render – will show "Select a player" message until one is chosen
   render();
 }
 
@@ -189,7 +166,6 @@ function populatePlayerFilter(selectEl, units) {
   if (!selectEl) return;
   const seen = new Map(); // playerId -> name
 
-  // First option: must pick a player
   selectEl.innerHTML = "";
   const defaultOpt = document.createElement("option");
   defaultOpt.value = "";
@@ -213,7 +189,6 @@ function populatePlayerFilter(selectEl, units) {
 function renderRoster(container, units, filters) {
   container.innerHTML = "";
 
-  // Require a player selection
   if (!filters.playerId) {
     const msg = document.createElement("p");
     msg.textContent = "Select a player from the dropdown above to view their Crusade roster.";
@@ -222,11 +197,8 @@ function renderRoster(container, units, filters) {
     return;
   }
 
-  // Apply filters
   const filtered = units.filter(unit => {
-    // Always scope to selected player first
     if (unit.playerId !== filters.playerId) return false;
-
     if (filters.team && unit.team !== filters.team) return false;
     if (filters.role && unit.battlefieldRole !== filters.role) return false;
 
@@ -241,7 +213,6 @@ function renderRoster(container, units, filters) {
         .toLowerCase();
       if (!haystack.includes(filters.search)) return false;
     }
-
     return true;
   });
 
@@ -253,7 +224,6 @@ function renderRoster(container, units, filters) {
     return;
   }
 
-  // We know all units are from the same player now.
   const playerName = filtered[0].playerName;
   const team = filtered[0].team;
   const armyName = filtered[0].armyName;
@@ -313,7 +283,6 @@ function renderUnitCard(unit) {
   const unitName = document.createElement("div");
   unitName.className = "unit-name";
   unitName.textContent = unit.unitName;
-
   nameBlock.appendChild(unitName);
 
   if (unit.uniqueName) {
@@ -346,7 +315,6 @@ function renderUnitCard(unit) {
   header.appendChild(nameBlock);
   header.appendChild(rolePill);
 
-  // Badges: epic / warlord
   const badgesRow = document.createElement("div");
   badgesRow.className = "unit-badges";
 
@@ -364,7 +332,6 @@ function renderUnitCard(unit) {
     badgesRow.appendChild(warlord);
   }
 
-  // Core line: points, models, faction
   const coreLine = document.createElement("div");
   coreLine.className = "unit-core-line";
 
@@ -380,7 +347,6 @@ function renderUnitCard(unit) {
   fac.textContent = unit.faction;
   coreLine.appendChild(fac);
 
-  // Crusade line: xp, rank, crusade points
   const crusadeLine = document.createElement("div");
   crusadeLine.className = "unit-crusade-line";
 
@@ -399,7 +365,6 @@ function renderUnitCard(unit) {
   cpTag.textContent = `CP ${unit.crusadePoints}`;
   crusadeLine.appendChild(cpTag);
 
-  // Footer: quick honours/scars indicator + kills pips
   const footer = document.createElement("div");
   footer.className = "unit-footer";
 
@@ -418,7 +383,6 @@ function renderUnitCard(unit) {
   footerLeft.appendChild(scarLabel);
 
   const footerRight = document.createElement("div");
-
   const killsLabel = document.createElement("span");
   killsLabel.textContent = "Kills: ";
   footerRight.appendChild(killsLabel);
@@ -523,5 +487,105 @@ function initPlayersPage() {
     block.appendChild(header);
     block.appendChild(list);
     container.appendChild(block);
+  }
+}
+
+// === BUILDER PAGE ===
+function initBuilderPage() {
+  const form = document.getElementById("unit-builder-form");
+  const preview = document.getElementById("builder-json-preview");
+
+  if (!form || !preview) return;
+
+  // Initialize preview with existing units
+  updateBuilderPreview(preview);
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const playerName = document.getElementById("player-name").value.trim();
+    const playerId = document.getElementById("player-id").value.trim();
+    const armyName = document.getElementById("army-name").value.trim();
+    const team = document.getElementById("team").value;
+
+    const unitName = document.getElementById("unit-name").value.trim();
+    const uniqueName = document.getElementById("unique-name").value.trim();
+    const faction = document.getElementById("faction").value.trim();
+    const subfaction = document.getElementById("subfaction").value.trim();
+    const battlefieldRole = document.getElementById("battlefield-role").value;
+    const isEpicHero = document.getElementById("is-epic-hero").checked;
+
+    const points = Number(document.getElementById("points").value || 0);
+    const models = Number(document.getElementById("models").value || 1);
+    const experience = Number(document.getElementById("experience").value || 0);
+    const rank = document.getElementById("rank").value;
+    const crusadePoints = Number(document.getElementById("crusade-points").value || 0);
+
+    const keywordsRaw = document.getElementById("keywords").value;
+    const notes = document.getElementById("notes").value;
+
+    const keywords = keywordsRaw
+      .split(",")
+      .map(k => k.trim())
+      .filter(k => k.length > 0);
+
+    const id = `unit_${Date.now()}`;
+
+    const newUnit = {
+      id,
+      unitName,
+      faction,
+      subfactionOrDetachment: subfaction,
+
+      battlefieldRole,
+      isEpicHero,
+
+      keywords,
+      uniqueName,
+
+      points,
+      models,
+
+      experience,
+      rank,
+      crusadePoints,
+
+      weapons: [],
+      wargear: [],
+      upgrades: [],
+      relics: [],
+
+      battleHonours: [],
+      battleScars: [],
+
+      notes,
+      image: "",
+
+      playerId,
+      playerName,
+      armyName,
+      team,
+
+      agendasCompleted: [],
+      notableBattles: [],
+      kills: {
+        unitsDestroyed: 0,
+        monstersOrVehiclesDestroyed: 0
+      }
+    };
+
+    crusadeUnits.push(newUnit);
+    updateBuilderPreview(preview);
+
+    form.reset();
+    alert("Unit added to builder preview. Copy the JSON when you're ready to save it.");
+  });
+}
+
+function updateBuilderPreview(previewEl) {
+  try {
+    previewEl.value = JSON.stringify(crusadeUnits, null, 2);
+  } catch (err) {
+    previewEl.value = "// Error serializing crusadeUnits:\n" + String(err);
   }
 }
