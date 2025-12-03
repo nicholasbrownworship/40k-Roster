@@ -1,3 +1,11 @@
+// === STORAGE KEYS ===
+const STORAGE_KEY_PLAYERS = "crusadePlayers_v1";
+const STORAGE_KEY_UNITS = "crusadeUnits_v1";
+
+// In-memory data (loaded from localStorage)
+let players = [];
+let crusadeUnits = [];
+
 // === HEADER LOADER ===
 function loadHeader() {
   const headerContainer = document.getElementById("site-header");
@@ -13,101 +21,45 @@ function loadHeader() {
     });
 }
 
+// === DATA LOAD / SAVE ===
+function loadData() {
+  try {
+    const storedPlayers = JSON.parse(localStorage.getItem(STORAGE_KEY_PLAYERS) || "[]");
+    if (Array.isArray(storedPlayers)) {
+      players = storedPlayers;
+    }
+  } catch (err) {
+    console.error("Error loading players from storage", err);
+    players = [];
+  }
+
+  try {
+    const storedUnits = JSON.parse(localStorage.getItem(STORAGE_KEY_UNITS) || "[]");
+    if (Array.isArray(storedUnits)) {
+      crusadeUnits = storedUnits;
+    }
+  } catch (err) {
+    console.error("Error loading units from storage", err);
+    crusadeUnits = [];
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(players));
+    localStorage.setItem(STORAGE_KEY_UNITS, JSON.stringify(crusadeUnits));
+  } catch (err) {
+    console.error("Error saving data to storage", err);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadHeader();
+  loadData();
   initCrusadeApp();
 });
 
-// === CRUSADE DATA MODEL (Crusade Mode Required Fields) ===
-// Starter data – you'll replace/expand this with your own units later.
-const crusadeUnits = [
-  {
-    id: "unit_001",
-    unitName: "Intercessor Squad",
-    faction: "Space Marines",
-    subfactionOrDetachment: "Ultramarines – Gladius Task Force",
-
-    battlefieldRole: "Battleline", // Character | Battleline | Dedicated Transport | Other Datasheets
-    isEpicHero: false,
-
-    keywords: ["INFANTRY", "ADEPTUS ASTARTES", "PRIMARIS"],
-    uniqueName: "Squad Baelor",
-
-    points: 110,
-    models: 5,
-
-    experience: 7,
-    rank: "Battle-hardened",
-    crusadePoints: 2,
-
-    weapons: [],
-    wargear: [],
-    upgrades: [],
-    relics: [],
-
-    battleHonours: [],
-    battleScars: [],
-
-    notes: "Painted as 3rd Company; main objective holders.",
-    image: "",
-
-    playerId: "player_nick",
-    playerName: "Nick Brown",
-    armyName: "Angels of the Ozark",
-    team: "Defenders",
-
-    agendasCompleted: [],
-    notableBattles: [],
-    kills: {
-      unitsDestroyed: 4,
-      monstersOrVehiclesDestroyed: 1
-    }
-  },
-  {
-    id: "unit_002",
-    unitName: "Hive Tyrant",
-    faction: "Tyranids",
-    subfactionOrDetachment: "Leviathan",
-
-    battlefieldRole: "Other Datasheets",
-    isEpicHero: false,
-
-    keywords: ["MONSTER", "TYRANIDS", "FLY", "SYNAPSE"],
-    uniqueName: "The Ozark Maw",
-
-    points: 195,
-    models: 1,
-
-    experience: 10,
-    rank: "Heroic",
-    crusadePoints: 3,
-
-    weapons: [],
-    wargear: [],
-    upgrades: [],
-    relics: [],
-
-    battleHonours: [],
-    battleScars: [],
-
-    notes: "",
-    image: "",
-
-    playerId: "player_other",
-    playerName: "Other Player",
-    armyName: "Hive Fleet Ozarka",
-    team: "Attackers",
-
-    agendasCompleted: [],
-    notableBattles: [],
-    kills: {
-      unitsDestroyed: 6,
-      monstersOrVehiclesDestroyed: 2
-    }
-  }
-];
-
-// === APP INITIALISATION ===
+// === APP INITIALISATION / ROUTING ===
 function initCrusadeApp() {
   const path = window.location.pathname;
 
@@ -120,7 +72,9 @@ function initCrusadeApp() {
   }
 }
 
-// === ROSTER PAGE (player-scoped) ===
+// =======================================================
+// ROSTER PAGE (index.html) – player-scoped roster viewer
+// =======================================================
 function initRosterPage() {
   const rosterSection = document.getElementById("roster-section");
   if (!rosterSection) return;
@@ -132,10 +86,8 @@ function initRosterPage() {
   const metaTotalUnits = document.getElementById("meta-total-units");
   const metaLastUpdated = document.getElementById("meta-last-updated");
 
-  // Populate player filter options
-  populatePlayerFilter(filterPlayer, crusadeUnits);
+  populatePlayerFilter(filterPlayer);
 
-  // Set meta
   if (metaTotalUnits) {
     metaTotalUnits.textContent = crusadeUnits.length.toString();
   }
@@ -151,7 +103,7 @@ function initRosterPage() {
       role: filterRole?.value || "",
       search: (filterSearch?.value || "").toLowerCase().trim()
     };
-    renderRoster(rosterSection, crusadeUnits, filters);
+    renderRoster(rosterSection, filters);
   };
 
   filterTeam && filterTeam.addEventListener("change", render);
@@ -162,32 +114,33 @@ function initRosterPage() {
   render();
 }
 
-function populatePlayerFilter(selectEl, units) {
+function populatePlayerFilter(selectEl) {
   if (!selectEl) return;
-  const seen = new Map(); // playerId -> name
 
   selectEl.innerHTML = "";
   const defaultOpt = document.createElement("option");
   defaultOpt.value = "";
-  defaultOpt.textContent = "Select a player…";
+  defaultOpt.textContent = players.length ? "Select a player…" : "No players yet";
   selectEl.appendChild(defaultOpt);
 
-  units.forEach(u => {
-    if (!seen.has(u.playerId)) {
-      seen.set(u.playerId, u.playerName);
-    }
-  });
-
-  for (const [id, name] of seen.entries()) {
+  players.forEach(p => {
     const opt = document.createElement("option");
-    opt.value = id;
-    opt.textContent = name;
+    opt.value = p.id;
+    opt.textContent = p.name;
     selectEl.appendChild(opt);
-  }
+  });
 }
 
-function renderRoster(container, units, filters) {
+function renderRoster(container, filters) {
   container.innerHTML = "";
+
+  if (!players.length) {
+    const msg = document.createElement("p");
+    msg.textContent = "No players yet. Go to the Players page to create one.";
+    msg.style.color = "#9ca3af";
+    container.appendChild(msg);
+    return;
+  }
 
   if (!filters.playerId) {
     const msg = document.createElement("p");
@@ -197,7 +150,7 @@ function renderRoster(container, units, filters) {
     return;
   }
 
-  const filtered = units.filter(unit => {
+  const filtered = crusadeUnits.filter(unit => {
     if (unit.playerId !== filters.playerId) return false;
     if (filters.team && unit.team !== filters.team) return false;
     if (filters.role && unit.battlefieldRole !== filters.role) return false;
@@ -224,9 +177,10 @@ function renderRoster(container, units, filters) {
     return;
   }
 
-  const playerName = filtered[0].playerName;
-  const team = filtered[0].team;
-  const armyName = filtered[0].armyName;
+  const player = players.find(p => p.id === filters.playerId);
+  const playerName = player ? player.name : filtered[0].playerName;
+  const team = player ? player.team : filtered[0].team;
+  const armyName = player ? player.armyName : filtered[0].armyName;
 
   const block = document.createElement("section");
   block.className = "player-block";
@@ -416,97 +370,209 @@ function renderUnitCard(unit) {
   return card;
 }
 
-// === PLAYERS PAGE ===
+// =========================================
+// PLAYERS PAGE (players.html) – CRUD players
+// =========================================
 function initPlayersPage() {
   const container = document.getElementById("players-list");
-  if (!container) return;
+  const form = document.getElementById("player-create-form");
 
-  const byPlayer = new Map();
+  if (!container || !form) return;
 
-  crusadeUnits.forEach(unit => {
-    if (!byPlayer.has(unit.playerId)) {
-      byPlayer.set(unit.playerId, {
-        playerName: unit.playerName,
-        team: unit.team,
-        armyName: unit.armyName,
-        units: []
-      });
+  const render = () => {
+    container.innerHTML = "";
+
+    if (!players.length) {
+      const msg = document.createElement("p");
+      msg.textContent = "No players yet. Create one using the form above.";
+      msg.style.color = "#9ca3af";
+      container.appendChild(msg);
+      return;
     }
-    byPlayer.get(unit.playerId).units.push(unit);
+
+    players.forEach(player => {
+      const block = document.createElement("section");
+      block.className = "player-block";
+
+      const header = document.createElement("div");
+      header.className = "player-block-header";
+
+      const title = document.createElement("div");
+      title.className = "player-title";
+      title.innerHTML = `<strong>${player.name}</strong> <span>– ${player.armyName}</span>`;
+
+      const meta = document.createElement("div");
+      meta.className = "player-meta";
+
+      const teamPill = document.createElement("div");
+      teamPill.className = "pill";
+      if (player.team === "Defenders") teamPill.classList.add("team-defenders");
+      if (player.team === "Attackers") teamPill.classList.add("team-attackers");
+      if (player.team === "Raiders") teamPill.classList.add("team-raiders");
+      teamPill.textContent = player.team;
+
+      const unitCount = crusadeUnits.filter(u => u.playerId === player.id).length;
+      const countPill = document.createElement("div");
+      countPill.className = "pill";
+      countPill.textContent = `${unitCount} unit${unitCount !== 1 ? "s" : ""}`;
+
+      meta.appendChild(teamPill);
+      meta.appendChild(countPill);
+
+      header.appendChild(title);
+      header.appendChild(meta);
+
+      const list = document.createElement("ul");
+      list.style.listStyle = "none";
+      list.style.padding = "0";
+      list.style.margin = "0.5rem 0 0";
+      list.style.fontSize = "0.85rem";
+
+      crusadeUnits
+        .filter(u => u.playerId === player.id)
+        .forEach(unit => {
+          const li = document.createElement("li");
+          li.style.padding = "0.2rem 0";
+          li.style.display = "flex";
+          li.style.justifyContent = "space-between";
+          li.innerHTML = `
+            <span>${unit.unitName}${unit.uniqueName ? ` – <em>${unit.uniqueName}</em>` : ""}</span>
+            <span style="color:#9ca3af;">${unit.points} pts · XP ${unit.experience}</span>
+          `;
+          list.appendChild(li);
+        });
+
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "Remove Player & Units";
+      removeBtn.style.marginTop = "0.6rem";
+      removeBtn.style.fontSize = "0.8rem";
+      removeBtn.style.padding = "0.3rem 0.7rem";
+      removeBtn.style.borderRadius = "999px";
+      removeBtn.style.border = "1px solid #f97373";
+      removeBtn.style.background = "#7f1d1d";
+      removeBtn.style.color = "#fee2e2";
+      removeBtn.style.cursor = "pointer";
+
+      removeBtn.addEventListener("click", () => {
+        const ok = window.confirm(
+          `Remove player "${player.name}" and all their units? This cannot be undone.`
+        );
+        if (!ok) return;
+
+        players = players.filter(p => p.id !== player.id);
+        crusadeUnits = crusadeUnits.filter(u => u.playerId !== player.id);
+        saveData();
+        render();
+      });
+
+      block.appendChild(header);
+      block.appendChild(list);
+      block.appendChild(removeBtn);
+      container.appendChild(block);
+    });
+  };
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const nameInput = document.getElementById("player-create-name");
+    const idInput = document.getElementById("player-create-id");
+    const armyInput = document.getElementById("player-create-army");
+    const teamSelect = document.getElementById("player-create-team");
+
+    const name = nameInput.value.trim();
+    let id = idInput.value.trim();
+    const armyName = armyInput.value.trim();
+    const team = teamSelect.value;
+
+    if (!name || !armyName || !team) {
+      alert("Name, army name, and team are required.");
+      return;
+    }
+
+    if (!id) {
+      id =
+        "player_" +
+        name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_+|_+$/g, "");
+    }
+
+    if (players.some(p => p.id === id)) {
+      alert("That player ID already exists. Choose a different one.");
+      return;
+    }
+
+    const newPlayer = {
+      id,
+      name,
+      armyName,
+      team
+    };
+
+    players.push(newPlayer);
+    saveData();
+    form.reset();
+    render();
   });
 
-  for (const [playerId, group] of byPlayer.entries()) {
-    const block = document.createElement("section");
-    block.className = "player-block";
-
-    const header = document.createElement("div");
-    header.className = "player-block-header";
-
-    const title = document.createElement("div");
-    title.className = "player-title";
-    title.innerHTML = `<strong>${group.playerName}</strong> <span>– ${group.armyName}</span>`;
-
-    const meta = document.createElement("div");
-    meta.className = "player-meta";
-
-    const teamPill = document.createElement("div");
-    teamPill.className = "pill";
-    if (group.team === "Defenders") teamPill.classList.add("team-defenders");
-    if (group.team === "Attackers") teamPill.classList.add("team-attackers");
-    if (group.team === "Raiders") teamPill.classList.add("team-raiders");
-    teamPill.textContent = group.team;
-
-    const countPill = document.createElement("div");
-    countPill.className = "pill";
-    countPill.textContent = `${group.units.length} unit${group.units.length !== 1 ? "s" : ""}`;
-
-    meta.appendChild(teamPill);
-    meta.appendChild(countPill);
-
-    header.appendChild(title);
-    header.appendChild(meta);
-
-    const list = document.createElement("ul");
-    list.style.listStyle = "none";
-    list.style.padding = "0";
-    list.style.margin = "0.5rem 0 0";
-    list.style.fontSize = "0.85rem";
-
-    group.units.forEach(unit => {
-      const li = document.createElement("li");
-      li.style.padding = "0.2rem 0";
-      li.style.display = "flex";
-      li.style.justifyContent = "space-between";
-      li.innerHTML = `
-        <span>${unit.unitName}${unit.uniqueName ? ` – <em>${unit.uniqueName}</em>` : ""}</span>
-        <span style="color:#9ca3af;">${unit.points} pts · XP ${unit.experience}</span>
-      `;
-      list.appendChild(li);
-    });
-
-    block.appendChild(header);
-    block.appendChild(list);
-    container.appendChild(block);
-  }
+  render();
 }
 
-// === BUILDER PAGE ===
+// =========================================
+// BUILDER PAGE (builder.html) – add units
+// =========================================
 function initBuilderPage() {
   const form = document.getElementById("unit-builder-form");
   const preview = document.getElementById("builder-json-preview");
+  const playerSelect = document.getElementById("builder-player");
+  const playerInfo = document.getElementById("builder-player-info");
 
-  if (!form || !preview) return;
+  if (!form || !preview || !playerSelect) return;
 
-  // Initialize preview with existing units
+  // Populate player dropdown
+  playerSelect.innerHTML = "";
+  const defaultOpt = document.createElement("option");
+  defaultOpt.value = "";
+  defaultOpt.textContent = players.length ? "Select a player…" : "No players yet";
+  playerSelect.appendChild(defaultOpt);
+
+  players.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name;
+    playerSelect.appendChild(opt);
+  });
+
+  playerSelect.addEventListener("change", () => {
+    const id = playerSelect.value;
+    const player = players.find(p => p.id === id);
+    if (!player) {
+      playerInfo.textContent = "Select a player to see their army and team.";
+    } else {
+      playerInfo.textContent = `${player.armyName} – ${player.team}`;
+    }
+  });
+
+  if (!players.length) {
+    playerInfo.textContent = "No players yet. Go to the Players page and create one first.";
+  } else {
+    playerInfo.textContent = "Select a player to see their army and team.";
+  }
+
   updateBuilderPreview(preview);
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const playerName = document.getElementById("player-name").value.trim();
-    const playerId = document.getElementById("player-id").value.trim();
-    const armyName = document.getElementById("army-name").value.trim();
-    const team = document.getElementById("team").value;
+    const selectedPlayerId = playerSelect.value;
+    const player = players.find(p => p.id === selectedPlayerId);
+
+    if (!player) {
+      alert("Select a valid player before adding a unit.");
+      return;
+    }
 
     const unitName = document.getElementById("unit-name").value.trim();
     const uniqueName = document.getElementById("unique-name").value.trim();
@@ -523,6 +589,12 @@ function initBuilderPage() {
 
     const keywordsRaw = document.getElementById("keywords").value;
     const notes = document.getElementById("notes").value;
+    const image = document.getElementById("image").value.trim();
+
+    if (!unitName || !faction || !battlefieldRole || !rank) {
+      alert("Please fill in all required unit fields.");
+      return;
+    }
 
     const keywords = keywordsRaw
       .split(",")
@@ -559,12 +631,12 @@ function initBuilderPage() {
       battleScars: [],
 
       notes,
-      image: "",
+      image: image || "",
 
-      playerId,
-      playerName,
-      armyName,
-      team,
+      playerId: player.id,
+      playerName: player.name,
+      armyName: player.armyName,
+      team: player.team,
 
       agendasCompleted: [],
       notableBattles: [],
@@ -575,10 +647,15 @@ function initBuilderPage() {
     };
 
     crusadeUnits.push(newUnit);
+    saveData();
     updateBuilderPreview(preview);
 
+    const keepPlayerId = playerSelect.value;
     form.reset();
-    alert("Unit added to builder preview. Copy the JSON when you're ready to save it.");
+    playerSelect.value = keepPlayerId || "";
+    playerSelect.dispatchEvent(new Event("change"));
+
+    alert("Unit added. Copy the JSON if needed, or view it on the Roster page.");
   });
 }
 
