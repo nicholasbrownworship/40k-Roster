@@ -1,1 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Campaign Map – Bastior Sub-Sector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Node-based campaign map for the Bastior Sub-Sector Crusade." />
 
+  <!-- Your global site styles + Crusade styles -->
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="crusade.css" />
+
+  <style>
+    /* ===== Campaign Map – page-local styling ===== */
+
+    .campaign-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      gap: 1.25rem;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 900px) {
+      .campaign-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .campaign-panel {
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 60%);
+      padding: 0.9rem 1rem;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
+    }
+
+    .campaign-panel h2 {
+      margin: 0 0 0.45rem;
+      font-size: 0.98rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      color: #e5e7eb;
+    }
+
+    .campaign-panel p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    /* Filters row */
+    .campaign-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0.7rem 0 0.2rem;
+    }
+
+    .campaign-filters > div {
+      flex: 1 1 150px;
+    }
+
+    /* Node map grid */
+    .campaign-map-grid {
+      margin-top: 0.6rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.9rem;
+    }
+
+    .campaign-cluster {
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top, #020617 0, #020617 60%);
+      padding: 0.6rem 0.8rem 0.75rem;
+    }
+
+    .campaign-cluster-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .campaign-cluster-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .campaign-cluster-sub {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .campaign-nodes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+
+    .territory-node {
+      position: relative;
+      border-radius: 999px;
+      padding: 0.35rem 0.65rem 0.35rem 0.55rem;
+      font-size: 0.8rem;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top, #020617 0, #020617 60%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .territory-node-main {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.4rem;
+      align-items: baseline;
+    }
+
+    .territory-name {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .territory-tag {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+
+    .territory-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      color: #9ca3af;
+    }
+
+    .territory-pill {
+      border-radius: 999px;
+      padding: 0.05rem 0.4rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      white-space: nowrap;
+    }
+
+    .territory-pill.defenders {
+      border-color: #22c55e;
+      color: #bbf7d0;
+      background: rgba(22, 163, 74, 0.15);
+    }
+
+    .territory-pill.attackers {
+      border-color: #f97316;
+      color: #fed7aa;
+      background: rgba(251, 146, 60, 0.15);
+    }
+
+    .territory-pill.raiders {
+      border-color: #38bdf8;
+      color: #bae6fd;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    .territory-pill.safe {
+      border-color: #22c55e;
+      color: #bbf7d0;
+      background: rgba(22, 163, 74, 0.25);
+    }
+
+    .territory-bar {
+      position: relative;
+      margin-top: 0.15rem;
+      height: 6px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid #111827;
+      overflow: hidden;
+    }
+
+    .territory-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 50%;
+      background: linear-gradient(to right, #22c55e, #16a34a);
+    }
+
+    .territory-bar-fill.attackers {
+      background: linear-gradient(to right, #f97316, #ea580c);
+    }
+
+    .territory-bar-fill.raiders {
+      background: linear-gradient(to right, #38bdf8, #0ea5e9);
+    }
+
+    /* Side panel – key & notes */
+    .campaign-key {
+      font-size: 0.8rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .campaign-key-group h3 {
+      margin: 0 0 0.25rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      color: #e5e7eb;
+    }
+
+    .campaign-key-group p {
+      margin: 0;
+      color: #9ca3af;
+    }
+
+    .campaign-key-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+    }
+
+    .campaign-key-pills span {
+      border-radius: 999px;
+      padding: 0.05rem 0.4rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      font-size: 0.75rem;
+      color: #e5e7eb;
+      white-space: nowrap;
+    }
+
+    .campaign-key-pills span.defenders { border-color:#22c55e; color:#bbf7d0; }
+    .campaign-key-pills span.attackers { border-color:#f97316; color:#fed7aa; }
+    .campaign-key-pills span.raiders   { border-color:#38bdf8; color:#bae6fd; }
+    .campaign-key-pills span.safe      { border-color:#22c55e; color:#bbf7d0; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="app-shell">
+    <!-- Page header -->
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1>Bastior Sub-Sector – Campaign Map</h1>
+        <p>
+          Node-based view of the sub-sector. Each territory shows who holds it,
+          how secure it is, and which cluster of the warzone it belongs to.
+        </p>
+      </div>
+      <div class="app-meta">
+        <div>Mode: <span>Crusade Campaign</span></div>
+        <div>Map Version: <span>v1 – Static Layout</span></div>
+      </div>
+    </header>
+
+    <section class="campaign-layout">
+      <!-- Left: Map & filters -->
+      <section class="campaign-panel">
+        <h2>Bastior Theatre Overview</h2>
+        <p>
+          This is a <strong>clean tactical map</strong> version. Later we can add an in-universe,
+          parchment-style variant as a second page.
+        </p>
+
+        <!-- Filters (visual only for now – we can wire to JS later) -->
+        <div class="campaign-filters">
+          <div>
+            <label for="map-filter-team" style="font-size:.8rem; display:block; margin-bottom:.1rem;">Team Focus</label>
+            <select id="map-filter-team" style="width:100%;">
+              <option>All forces</option>
+              <option>Defenders</option>
+              <option>Attackers</option>
+              <option>Raiders</option>
+            </select>
+          </div>
+          <div>
+            <label for="map-filter-region" style="font-size:.8rem; display:block; margin-bottom:.1rem;">Region</label>
+            <select id="map-filter-region" style="width:100%;">
+              <option>All regions</option>
+              <option>Bastior Core</option>
+              <option>Outer Marches</option>
+              <option>Industrial Belt</option>
+              <option>Frontier Expanse</option>
+            </select>
+          </div>
+          <div>
+            <label for="map-filter-search" style="font-size:.8rem; display:block; margin-bottom:.1rem;">Search</label>
+            <input
+              id="map-filter-search"
+              type="search"
+              placeholder="Search territory name or type…"
+              style="width:100%;"
+            />
+          </div>
+        </div>
+
+        <!-- Map grid – static nodes for now (easy to rename later) -->
+        <div class="campaign-map-grid">
+          <!-- Cluster 1 -->
+          <article class="campaign-cluster">
+            <div class="campaign-cluster-header">
+              <div class="campaign-cluster-title">Bastior Core</div>
+              <div class="campaign-cluster-sub">Primary warzone hub</div>
+            </div>
+            <div class="campaign-nodes">
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Bastior Prime</span>
+                  <span class="territory-tag">Hive World</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill defenders">Defenders – 100%</span>
+                  <span class="territory-pill safe">Safe</span>
+                  <span class="territory-pill">+Major Strategic Asset</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill defenders" style="width:100%;"></div>
+                </div>
+              </div>
+
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Karthax Forge</span>
+                  <span class="territory-tag">Forge World</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill defenders">Defenders – 75%</span>
+                  <span class="territory-pill">Under Pressure</span>
+                  <span class="territory-pill">+Armour & wargear</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill defenders" style="width:75%;"></div>
+                </div>
+              </div>
+
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Vandros Gate</span>
+                  <span class="territory-tag">Void Station</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill attackers">Attackers – 25%</span>
+                  <span class="territory-pill">Beachhead</span>
+                  <span class="territory-pill">Orbital Corridor</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill attackers" style="width:25%;"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Cluster 2 -->
+          <article class="campaign-cluster">
+            <div class="campaign-cluster-header">
+              <div class="campaign-cluster-title">Outer Marches</div>
+              <div class="campaign-cluster-sub">Disputed frontier</div>
+            </div>
+            <div class="campaign-nodes">
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Helith Reach</span>
+                  <span class="territory-tag">Agri World</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill attackers">Attackers – 75%</span>
+                  <span class="territory-pill">Grinder World</span>
+                  <span class="territory-pill">Supply Lines</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill attackers" style="width:75%;"></div>
+                </div>
+              </div>
+
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Calixis Spur</span>
+                  <span class="territory-tag">Frontier System</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill defenders">Defenders – 25%</span>
+                  <span class="territory-pill">Outpost</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill defenders" style="width:25%;"></div>
+                </div>
+              </div>
+
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Riftward Verge</span>
+                  <span class="territory-tag">Warp-Torn</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill raiders">Raiders – 50%</span>
+                  <span class="territory-pill">Raiding Ground</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill raiders" style="width:50%;"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Cluster 3 -->
+          <article class="campaign-cluster">
+            <div class="campaign-cluster-header">
+              <div class="campaign-cluster-title">Industrial Belt</div>
+              <div class="campaign-cluster-sub">Munitions & logistics</div>
+            </div>
+            <div class="campaign-nodes">
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Darnak Foundries</span>
+                  <span class="territory-tag">Munitorum Hub</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill defenders">Defenders – 100%</span>
+                  <span class="territory-pill safe">Safe</span>
+                  <span class="territory-pill">+Resupply Bonus</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill defenders" style="width:100%;"></div>
+                </div>
+              </div>
+
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Skollan Docks</span>
+                  <span class="territory-tag">Orbital Docks</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill attackers">Attackers – 50%</span>
+                  <span class="territory-pill">Contested</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill attackers" style="width:50%;"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Cluster 4 -->
+          <article class="campaign-cluster">
+            <div class="campaign-cluster-header">
+              <div class="campaign-cluster-title">Frontier Expanse</div>
+              <div class="campaign-cluster-sub">Low priority, high risk</div>
+            </div>
+            <div class="campaign-nodes">
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Kryll’s Fall</span>
+                  <span class="territory-tag">Dead World</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill">Unclaimed</span>
+                  <span class="territory-pill">Rumoured Relics</span>
+                </div>
+                <div class="territory-bar">
+                  <!-- Empty bar = unclaimed -->
+                </div>
+              </div>
+
+              <div class="territory-node">
+                <div class="territory-node-main">
+                  <span class="territory-name">Silent Halo</span>
+                  <span class="territory-tag">Derelict Ring</span>
+                </div>
+                <div class="territory-meta-row">
+                  <span class="territory-pill raiders">Raiders – 25%</span>
+                  <span class="territory-pill">Ambush Zone</span>
+                </div>
+                <div class="territory-bar">
+                  <div class="territory-bar-fill raiders" style="width:25%;"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Right: Legend / rules summary / notes -->
+      <aside class="campaign-panel">
+        <div class="campaign-key">
+          <div class="campaign-key-group">
+            <h3>Legend & Control States</h3>
+            <p>Colours show which team currently holds the territory and how secure it is.</p>
+            <div class="campaign-key-pills">
+              <span class="defenders">Defenders</span>
+              <span class="attackers">Attackers</span>
+              <span class="raiders">Raiders</span>
+              <span class="safe">Safe (cannot be attacked)</span>
+            </div>
+          </div>
+
+          <div class="campaign-key-group">
+            <h3>Control Thresholds</h3>
+            <p>
+              You described the flow as: <br />
+              <strong>Defenders:</strong> 100 → 75 → 0<br />
+              <strong>Attackers:</strong> 0 → 25 → 100
+            </p>
+            <p style="margin-top:.3rem;">
+              At <strong>75%</strong> control, a lesser benefit is active. At <strong>100%</strong>,
+              a major buff is active. If defenders win the “clash” battle (75% vs 25%), the territory
+              returns to 100%–Safe and is locked for a campaign turn.
+            </p>
+          </div>
+
+          <div class="campaign-key-group">
+            <h3>How we’ll use this page</h3>
+            <p>
+              Right now this is a clean, static layout. Next steps (when you’re ready):
+            </p>
+            <ul style="margin:.3rem 0 0; padding-left:1.1rem; font-size:.8rem; color:#9ca3af;">
+              <li>Drive these nodes from a <code>territories.json</code> or localStorage.</li>
+              <li>Add per-node control editing (25/75/100) tied to your campaign rules.</li>
+              <li>Optional: a second “relic map” or parchment-style version for in-universe handouts.</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
